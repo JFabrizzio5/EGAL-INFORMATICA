@@ -4,11 +4,14 @@
 const char* ssid = "INFINITUM05A4_2.4";
 const char* password = "5XE5sd88pt";
 const char* websocket_server = "192.168.1.159"; // IP de tu PC
-const uint16_t websocket_port = 8765;           // Puerto del servidor WebSocket
+const uint16_t websocket_port = 8765;
 
 WebSocketsClient webSocket;
 
 #define LED_PIN 2
+
+// Variables de conexión
+unsigned long lastReconnectAttempt = 0;
 
 // Variables para controlar el parpadeo al conectar
 bool blinkOnConnect = false;
@@ -16,7 +19,7 @@ unsigned long blinkStartTime = 0;
 int blinkCount = 0;
 bool ledState = LOW;
 
-// Variables para controlar el encendido prolongado al recibir "2"
+// Variables para mantener el LED encendido
 bool keepLedOn = false;
 unsigned long ledOnStartTime = 0;
 
@@ -58,33 +61,55 @@ void setup() {
   Serial.println("\nConectado a WiFi");
   Serial.println(WiFi.localIP());
 
+  connectWebSocket();
+}
+
+void connectWebSocket() {
+  Serial.println("Intentando conectar al WebSocket...");
   webSocket.begin(websocket_server, websocket_port, "/");
   webSocket.onEvent(webSocketEvent);
-  webSocket.setReconnectInterval(5000);
+  webSocket.setReconnectInterval(5000); // Reintenta cada 5 segundos
 }
 
 void loop() {
+  // Verificar conexión WiFi
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi desconectado. Reintentando...");
+    WiFi.begin(ssid, password);
+    delay(5000);
+    return;
+  }
+
+  // Reintento manual si no está conectado
+  if (!webSocket.isConnected()) {
+    unsigned long now = millis();
+    if (now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      connectWebSocket(); // Intentar reconexión
+    }
+  }
+
   webSocket.loop();
 
   unsigned long currentMillis = millis();
 
-  // Control parpadeo cuando conecta: 3 parpadeos rápidos (100ms ON, 100ms OFF)
+  // Parpadeo al conectar (3 veces)
   if (blinkOnConnect && !keepLedOn) {
     if (currentMillis - blinkStartTime >= 100) {
       blinkStartTime = currentMillis;
       ledState = !ledState;
       digitalWrite(LED_PIN, ledState);
-      if (!ledState) { // Cada vez que se apaga, contamos un ciclo completo
+      if (!ledState) {
         blinkCount++;
         if (blinkCount >= 3) {
-          blinkOnConnect = false;  // Termina el parpadeo
+          blinkOnConnect = false;
           digitalWrite(LED_PIN, LOW);
         }
       }
     }
   }
 
-  // Control para mantener LED encendido 5 segundos cuando recibe "2"
+  // LED encendido 5s al recibir "2"
   if (keepLedOn) {
     if (currentMillis - ledOnStartTime >= 5000) {
       digitalWrite(LED_PIN, LOW);
