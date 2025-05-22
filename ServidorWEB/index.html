@@ -3,26 +3,381 @@
 
 <head>
     <title>Control ESP32</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .connecting {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        button {
+            padding: 15px 25px;
+            font-size: 16px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #545b62;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-    <h2>Encender LED</h2>
-    <button onclick="sendMessage('2')">Encender puerto 2</button>
+    <h2>Control ESP32 - WebSocket Client</h2>
+
+    <!-- Estado de conexión -->
+    <div id="status" class="status disconnected">
+        Desconectado
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats">
+        <div class="stat-item">
+            <div>Reconexiones</div>
+            <div id="reconnectCount">0</div>
+        </div>
+        <div class="stat-item">
+            <div>Último Ping</div>
+            <div id="lastPing">-</div>
+        </div>
+        <div class="stat-item">
+            <div>Uptime</div>
+            <div id="uptime">0s</div>
+        </div>
+    </div>
+
+    <!-- Controles -->
+    <div>
+        <button id="ledBtn" class="btn-primary" onclick="sendMessage('2')" disabled>
+            Encender LED (Puerto 2)
+        </button>
+        <button class="btn-secondary" onclick="toggleConnection()">
+            Reconectar
+        </button>
+        <button class="btn-secondary" onclick="toggleLog()">
+            Mostrar/Ocultar Log
+        </button>
+    </div>
+
+    <!-- Log de eventos -->
+    <div id="logContainer" class="log hidden"></div>
 
     <script>
-        const socket = new WebSocket("ws://192.168.1.159:8765"); // Usa IP de tu PC
+        class WebSocketManager {
+            constructor(url) {
+                this.url = url;
+                this.socket = null;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 50;
+                this.reconnectInterval = 2000; // 2 segundos inicial
+                this.heartbeatInterval = 10000; // 10 segundos
+                this.heartbeatTimer = null;
+                this.reconnectTimer = null;
+                this.connectionStartTime = null;
+                this.lastPingTime = null;
 
-        socket.onopen = () => console.log("Conectado al WebSocket");
-        socket.onmessage = (event) => console.log("Mensaje del servidor:", event.data);
-        socket.onclose = () => console.log("Conexión cerrada");
+                // UI elements
+                this.statusEl = document.getElementById('status');
+                this.ledBtn = document.getElementById('ledBtn');
+                this.logEl = document.getElementById('logContainer');
+                this.reconnectCountEl = document.getElementById('reconnectCount');
+                this.lastPingEl = document.getElementById('lastPing');
+                this.uptimeEl = document.getElementById('uptime');
 
-        function sendMessage(msg) {
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(msg);
-                console.log("Mensaje enviado:", msg);
-            } else {
-                console.log("WebSocket no está conectado");
+                // Event handlers para visibilidad
+                this.setupVisibilityHandlers();
+
+                // Iniciar conexión
+                this.connect();
+
+                // Actualizar UI cada segundo
+                setInterval(() => this.updateUI(), 1000);
             }
+
+            setupVisibilityHandlers() {
+                // Detectar cuando la página se oculta/muestra
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        // Página visible otra vez
+                        this.log('Página visible - verificando conexión...');
+                        this.checkConnection();
+                    } else {
+                        this.log('Página oculta - manteniendo conexión...');
+                    }
+                });
+
+                // Detectar cuando la ventana pierde/gana foco
+                window.addEventListener('focus', () => {
+                    this.log('Ventana en foco - verificando conexión...');
+                    this.checkConnection();
+                });
+
+                window.addEventListener('blur', () => {
+                    this.log('Ventana sin foco');
+                });
+            }
+
+            connect() {
+                if (this.socket && (this.socket.readyState === WebSocket.CONNECTING ||
+                    this.socket.readyState === WebSocket.OPEN)) {
+                    return;
+                }
+
+                this.log(`Conectando a ${this.url}...`);
+                this.updateStatus('connecting', 'Conectando...');
+
+                try {
+                    this.socket = new WebSocket(this.url);
+
+                    this.socket.onopen = () => {
+                        this.log('✅ Conectado al WebSocket');
+                        this.updateStatus('connected', 'Conectado');
+                        this.connectionStartTime = Date.now();
+                        this.reconnectAttempts = 0;
+                        this.reconnectInterval = 2000; // Reset interval
+                        this.startHeartbeat();
+                    };
+
+                    this.socket.onmessage = (event) => {
+                        this.log(`📨 Mensaje recibido: ${event.data}`);
+                        this.lastPingTime = Date.now(); // Actualizar en cualquier mensaje
+                    };
+
+                    this.socket.onclose = (event) => {
+                        this.log(`❌ Conexión cerrada (código: ${event.code})`);
+                        this.updateStatus('disconnected', 'Desconectado');
+                        this.stopHeartbeat();
+                        this.scheduleReconnect();
+                    };
+
+                    this.socket.onerror = (error) => {
+                        this.log(`❌ Error en WebSocket: ${error}`);
+                        this.updateStatus('disconnected', 'Error de conexión');
+                    };
+
+                } catch (error) {
+                    this.log(`❌ Error creando WebSocket: ${error}`);
+                    this.scheduleReconnect();
+                }
+            }
+
+            startHeartbeat() {
+                this.stopHeartbeat();
+                this.heartbeatTimer = setInterval(() => {
+                    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                        // Enviar ping silencioso (el servidor ESP32 lo detectará)
+                        this.socket.send('ping');
+                        this.lastPingTime = Date.now();
+                        this.log('🏓 Heartbeat enviado');
+                    }
+                }, this.heartbeatInterval);
+            }
+
+            stopHeartbeat() {
+                if (this.heartbeatTimer) {
+                    clearInterval(this.heartbeatTimer);
+                    this.heartbeatTimer = null;
+                }
+            }
+
+            scheduleReconnect() {
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                }
+
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    this.reconnectCountEl.textContent = this.reconnectAttempts;
+
+                    const delay = Math.min(this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts), 30000);
+
+                    this.log(`🔄 Reintentando en ${delay / 1000}s... (intento ${this.reconnectAttempts})`);
+
+                    this.reconnectTimer = setTimeout(() => {
+                        this.connect();
+                    }, delay);
+                } else {
+                    this.log(`❌ Máximo de intentos alcanzado (${this.maxReconnectAttempts})`);
+                    this.updateStatus('disconnected', 'Conexión fallida - Recargar página');
+                }
+            }
+
+            checkConnection() {
+                if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+                    this.log('🔍 Conexión perdida - reconectando...');
+                    this.connect();
+                } else {
+                    // Enviar ping para verificar
+                    this.socket.send('ping');
+                    this.log('🔍 Verificando conexión...');
+                }
+            }
+
+            sendMessage(message) {
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.socket.send(message);
+                    this.log(`📤 Enviado: ${message}`);
+                    return true;
+                } else {
+                    this.log(`❌ No se puede enviar: conexión no disponible`);
+                    this.checkConnection(); // Intentar reconectar
+                    return false;
+                }
+            }
+
+            updateStatus(type, message) {
+                this.statusEl.className = `status ${type}`;
+                this.statusEl.textContent = message;
+
+                // Habilitar/deshabilitar botones
+                this.ledBtn.disabled = (type !== 'connected');
+            }
+
+            updateUI() {
+                // Actualizar uptime
+                if (this.connectionStartTime) {
+                    const uptime = Math.floor((Date.now() - this.connectionStartTime) / 1000);
+                    this.uptimeEl.textContent = `${uptime}s`;
+                }
+
+                // Actualizar último ping
+                if (this.lastPingTime) {
+                    const timeSince = Math.floor((Date.now() - this.lastPingTime) / 1000);
+                    this.lastPingEl.textContent = `${timeSince}s ago`;
+                }
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                console.log(logEntry);
+
+                // Agregar al log visual
+                this.logEl.innerHTML += logEntry + '<br>';
+                this.logEl.scrollTop = this.logEl.scrollHeight;
+
+                // Limitar entradas del log
+                const lines = this.logEl.innerHTML.split('<br>');
+                if (lines.length > 50) {
+                    this.logEl.innerHTML = lines.slice(-50).join('<br>');
+                }
+            }
+
+            forceReconnect() {
+                this.log('🔄 Reconexión forzada por usuario');
+                if (this.socket) {
+                    this.socket.close();
+                }
+                this.reconnectAttempts = 0;
+                this.connect();
+            }
+        }
+
+        // Inicializar WebSocket Manager
+        const wsManager = new WebSocketManager("ws://192.168.1.159:8765");
+
+        // Funciones globales para los botones
+        function sendMessage(msg) {
+            wsManager.sendMessage(msg);
+        }
+
+        function toggleConnection() {
+            wsManager.forceReconnect();
+        }
+
+        function toggleLog() {
+            const logContainer = document.getElementById('logContainer');
+            logContainer.classList.toggle('hidden');
+        }
+
+        // Prevenir que la página se "duerma" en algunos navegadores móviles
+        let wakeLock = null;
+
+        // Intentar mantener la pantalla activa (si está soportado)
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').then(lock => {
+                wakeLock = lock;
+                console.log('Wake lock activado');
+            }).catch(err => {
+                console.log('Wake lock no disponible:', err);
+            });
         }
     </script>
 </body>
