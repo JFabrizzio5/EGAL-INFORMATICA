@@ -21,7 +21,10 @@ async def enviar_a_todos(mensaje, exclude=None):
     for client in connected_clients.copy():
         if client != exclude:  # No se lo envía al mismo que lo mandó
             try:
+                print(f"✅ Mensaje enviado a {mensaje}")
                 await client.send(mensaje)
+             
+                #await client.send("2")
             except Exception as e:
                 print(f"❌ Error al enviar mensaje: {e}")
 
