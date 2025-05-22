@@ -17,7 +17,7 @@ async def handler(websocket):
     except Exception as e:
         print(f"❌ Error inesperado: {e}")
     finally:
-        connected_clients.discard(websocket)  # usa discard por si ya no está
+        connected_clients.discard(websocket)
         print("🧹 Cliente eliminado de la lista")
 
 async def enviar_a_todos(mensaje, exclude=None):
@@ -31,7 +31,13 @@ async def enviar_a_todos(mensaje, exclude=None):
                 print(f"❌ Error al enviar mensaje: {e}")
 
 async def main():
-    async with websockets.serve(handler, "0.0.0.0", 8765, ping_interval=20, ping_timeout=10):
+    async with websockets.serve(
+        handler,
+        "0.0.0.0",
+        8765,
+        ping_interval=30,
+        ping_timeout=60
+    ):
         print("🚀 Servidor WebSocket corriendo en puerto 8765")
         await asyncio.Future()  # run forever
 
