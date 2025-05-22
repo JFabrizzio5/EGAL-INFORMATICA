@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Control ESP32</title>
+</head>
+
+<body>
+    <h2>Encender LED</h2>
+    <button onclick="sendMessage('2')">Encender puerto 2</button>
+
+    <script>
+        const socket = new WebSocket("ws://192.168.1.159:8765"); // Usa IP de tu PC
+
+        socket.onopen = () => console.log("Conectado al WebSocket");
+        socket.onmessage = (event) => console.log("Mensaje del servidor:", event.data);
+        socket.onclose = () => console.log("Conexión cerrada");
+
+        function sendMessage(msg) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(msg);
+                console.log("Mensaje enviado:", msg);
+            } else {
+                console.log("WebSocket no está conectado");
+            }
+        }
+    </script>
+</body>
+
+</html>
