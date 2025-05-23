@@ -2,143 +2,340 @@
 <html>
 
 <head>
-    <title>Control ESP32</title>
+    <title>Control ESP32 - 4 Relés</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
             font-weight: bold;
+            text-align: center;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .connected {
             background-color: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
+            border: 2px solid #c3e6cb;
         }
 
         .disconnected {
             background-color: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
+            border: 2px solid #f5c6cb;
         }
 
         .connecting {
             background-color: #fff3cd;
             color: #856404;
-            border: 1px solid #ffeaa7;
+            border: 2px solid #ffeaa7;
         }
 
-        button {
-            padding: 15px 25px;
-            font-size: 16px;
-            margin: 10px 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
+        .connection-timeout {
+            background-color: #e74c3c;
             color: white;
+            border: 2px solid #c0392b;
         }
 
-        .btn-primary:hover:not(:disabled) {
-            background-color: #0056b3;
+        .relay-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .relay-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .relay-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .relay-card h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .relay-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .relay-button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .relay-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .relay-status {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .relay-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .relay-inactive {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
         }
 
         .btn-secondary {
             background-color: #6c757d;
             color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
         }
 
-        .btn-secondary:hover:not(:disabled) {
+        .btn-secondary:hover {
             background-color: #545b62;
         }
 
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .log {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-            margin-top: 20px;
-        }
-
         .stats {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
         }
 
         .stat-item {
             text-align: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .log {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+            line-height: 1.4;
         }
 
         .hidden {
             display: none;
         }
 
-        .connection-timeout {
-            background-color: #e74c3c;
+        .emergency-stop {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
-            border: 1px solid #c0392b;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s;
+        }
+
+        .emergency-stop:hover {
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .relay-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .control-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h2>Control ESP32 - WebSocket Client</h2>
+    <div class="header">
+        <h1>Control ESP32 - Sistema de 4 Relés</h1>
+        <p>WebSocket Client v2.0</p>
+    </div>
 
     <!-- Estado de conexión -->
     <div id="status" class="status disconnected">
-        Desconectado
+        🔴 Desconectado
     </div>
 
     <!-- Estadísticas -->
     <div class="stats">
         <div class="stat-item">
-            <div>Reconexiones</div>
-            <div id="reconnectCount">0</div>
+            <div class="stat-label">Reconexiones</div>
+            <div class="stat-value" id="reconnectCount">0</div>
         </div>
         <div class="stat-item">
-            <div>Último Ping</div>
-            <div id="lastPing">-</div>
+            <div class="stat-label">Último Ping</div>
+            <div class="stat-value" id="lastPing">-</div>
         </div>
         <div class="stat-item">
-            <div>Uptime</div>
-            <div id="uptime">0s</div>
+            <div class="stat-label">Uptime</div>
+            <div class="stat-value" id="uptime">0s</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Relés Activos</div>
+            <div class="stat-value" id="activeRelays">0</div>
         </div>
     </div>
 
-    <!-- Controles -->
-    <div>
-        <button id="ledBtn" class="btn-primary" onclick="sendMessage('2')" disabled>
-            Encender LED (Puerto 2)
-        </button>
-        <button class="btn-secondary" onclick="toggleConnection()">
-            Reconectar
-        </button>
-        <button class="btn-secondary" onclick="toggleLog()">
-            Mostrar/Ocultar Log
+    <!-- Panel de control de relés -->
+    <div class="relay-grid">
+        <div class="relay-card">
+            <h3>🔌 Relé 1</h3>
+            <button class="relay-button" onclick="activateRelay(1)" disabled>
+                Activar Relé 1
+            </button>
+            <div class="relay-status relay-inactive" id="relay1Status">
+                Inactivo
+            </div>
+        </div>
+
+        <div class="relay-card">
+            <h3>🔌 Relé 2</h3>
+            <button class="relay-button" onclick="activateRelay(2)" disabled>
+                Activar Relé 2
+            </button>
+            <div class="relay-status relay-inactive" id="relay2Status">
+                Inactivo
+            </div>
+        </div>
+
+        <div class="relay-card">
+            <h3>🔌 Relé 3</h3>
+            <button class="relay-button" onclick="activateRelay(3)" disabled>
+                Activar Relé 3
+            </button>
+            <div class="relay-status relay-inactive" id="relay3Status">
+                Inactivo
+            </div>
+        </div>
+
+        <div class="relay-card">
+            <h3>🔌 Relé 4</h3>
+            <button class="relay-button" onclick="activateRelay(4)" disabled>
+                Activar Relé 4
+            </button>
+            <div class="relay-status relay-inactive" id="relay4Status">
+                Inactivo
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de control general -->
+    <div class="control-panel">
+        <h3>🎛️ Panel de Control</h3>
+        <div class="control-buttons">
+            <button class="btn-secondary" onclick="toggleConnection()">
+                🔄 Reconectar
+            </button>
+            <button class="btn-secondary" onclick="testLed()">
+                💡 Test LED
+            </button>
+            <button class="btn-secondary" onclick="toggleLog()">
+                📋 Mostrar/Ocultar Log
+            </button>
+            <button class="btn-secondary" onclick="testAllRelays()">
+                ⚡ Test Secuencial
+            </button>
+        </div>
+
+        <button class="emergency-stop" onclick="emergencyStop()">
+            🚨 PARADA DE EMERGENCIA
         </button>
     </div>
 
@@ -151,26 +348,30 @@
                 this.url = url;
                 this.socket = null;
                 this.reconnectAttempts = 0;
-                this.maxReconnectAttempts = 100; // Más intentos
-                this.reconnectInterval = 1000; // 1 segundo inicial (más rápido)
-                this.heartbeatInterval = 5000; // 5 segundos (más frecuente)
+                this.maxReconnectAttempts = 100;
+                this.reconnectInterval = 1000;
+                this.heartbeatInterval = 5000;
                 this.heartbeatTimer = null;
                 this.reconnectTimer = null;
                 this.connectionStartTime = null;
                 this.lastPingTime = null;
                 this.connectionTimeout = null;
                 this.isReconnecting = false;
-                this.connectionTimeoutDuration = 5000; // 5 segundos timeout para conexión
+                this.connectionTimeoutDuration = 5000;
+
+                // Estado de los relés
+                this.relayStates = [false, false, false, false];
+                this.relayTimers = [null, null, null, null];
 
                 // UI elements
                 this.statusEl = document.getElementById('status');
-                this.ledBtn = document.getElementById('ledBtn');
                 this.logEl = document.getElementById('logContainer');
                 this.reconnectCountEl = document.getElementById('reconnectCount');
                 this.lastPingEl = document.getElementById('lastPing');
                 this.uptimeEl = document.getElementById('uptime');
+                this.activeRelaysEl = document.getElementById('activeRelays');
 
-                // Event handlers mejorados
+                // Event handlers
                 this.setupVisibilityHandlers();
                 this.setupNetworkHandlers();
 
@@ -179,33 +380,22 @@
 
                 // Actualizar UI cada segundo
                 setInterval(() => this.updateUI(), 1000);
-
-                // Verificar conexión cada 30 segundos
                 setInterval(() => this.periodicConnectionCheck(), 30000);
             }
 
             setupVisibilityHandlers() {
-                // Detectar cuando la página se oculta/muestra
                 document.addEventListener('visibilitychange', () => {
                     if (!document.hidden) {
                         this.log('📱 Página visible - forzando reconexión...');
                         setTimeout(() => this.forceReconnect(), 500);
-                    } else {
-                        this.log('📱 Página oculta');
                     }
                 });
 
-                // Detectar cuando la ventana pierde/gana foco
                 window.addEventListener('focus', () => {
                     this.log('🔍 Ventana en foco - forzando reconexión...');
                     setTimeout(() => this.forceReconnect(), 500);
                 });
 
-                window.addEventListener('blur', () => {
-                    this.log('😴 Ventana sin foco');
-                });
-
-                // Detectar cuando se hace clic en la página (usuario activo)
                 document.addEventListener('click', () => {
                     if (!this.isConnected()) {
                         this.log('👆 Usuario activo - verificando conexión...');
@@ -215,7 +405,6 @@
             }
 
             setupNetworkHandlers() {
-                // Detectar cambios en la conectividad de red
                 window.addEventListener('online', () => {
                     this.log('🌐 Red disponible - reconectando...');
                     setTimeout(() => this.forceReconnect(), 1000);
@@ -223,7 +412,7 @@
 
                 window.addEventListener('offline', () => {
                     this.log('📡 Red perdida');
-                    this.updateStatus('disconnected', 'Sin conexión a internet');
+                    this.updateStatus('disconnected', '🔴 Sin conexión a internet');
                 });
             }
 
@@ -232,13 +421,11 @@
             }
 
             connect() {
-                // Si ya hay una conexión activa o en progreso, no hacer nada
                 if (this.socket && (this.socket.readyState === WebSocket.CONNECTING ||
                     this.socket.readyState === WebSocket.OPEN)) {
                     return;
                 }
 
-                // Limpiar socket anterior
                 if (this.socket) {
                     this.socket.onopen = null;
                     this.socket.onclose = null;
@@ -248,14 +435,13 @@
 
                 this.isReconnecting = true;
                 this.log(`🔄 Conectando a ${this.url}... (intento ${this.reconnectAttempts + 1})`);
-                this.updateStatus('connecting', 'Conectando...');
+                this.updateStatus('connecting', '🟡 Conectando...');
 
-                // Timeout para la conexión
                 this.connectionTimeout = setTimeout(() => {
                     if (this.socket && this.socket.readyState === WebSocket.CONNECTING) {
                         this.log('⏰ Timeout de conexión - cancelando...');
                         this.socket.close();
-                        this.updateStatus('connection-timeout', 'Timeout de conexión');
+                        this.updateStatus('connection-timeout', '🔴 Timeout de conexión');
                         this.scheduleReconnect();
                     }
                 }, this.connectionTimeoutDuration);
@@ -266,28 +452,30 @@
                     this.socket.onopen = () => {
                         this.clearConnectionTimeout();
                         this.log('✅ Conectado al WebSocket');
-                        this.updateStatus('connected', 'Conectado');
+                        this.updateStatus('connected', '🟢 Conectado');
                         this.connectionStartTime = Date.now();
                         this.reconnectAttempts = 0;
-                        this.reconnectInterval = 1000; // Reset interval
+                        this.reconnectInterval = 1000;
                         this.isReconnecting = false;
                         this.startHeartbeat();
+                        this.enableRelayButtons(true);
                     };
 
                     this.socket.onmessage = (event) => {
                         this.log(`📨 Mensaje recibido: ${event.data}`);
                         this.lastPingTime = Date.now();
+                        this.handleServerMessage(event.data);
                     };
 
                     this.socket.onclose = (event) => {
                         this.clearConnectionTimeout();
-                        this.log(`❌ Conexión cerrada (código: ${event.code}, razón: ${event.reason || 'Sin razón'})`);
-                        this.updateStatus('disconnected', 'Desconectado');
+                        this.log(`❌ Conexión cerrada (código: ${event.code})`);
+                        this.updateStatus('disconnected', '🔴 Desconectado');
                         this.stopHeartbeat();
                         this.isReconnecting = false;
+                        this.enableRelayButtons(false);
 
-                        // Reconectar inmediatamente si no fue manual
-                        if (event.code !== 1000) { // 1000 = cierre normal
+                        if (event.code !== 1000) {
                             this.scheduleReconnect();
                         }
                     };
@@ -295,8 +483,9 @@
                     this.socket.onerror = (error) => {
                         this.clearConnectionTimeout();
                         this.log(`❌ Error en WebSocket: ${error}`);
-                        this.updateStatus('disconnected', 'Error de conexión');
+                        this.updateStatus('disconnected', '🔴 Error de conexión');
                         this.isReconnecting = false;
+                        this.enableRelayButtons(false);
                     };
 
                 } catch (error) {
@@ -304,6 +493,13 @@
                     this.log(`❌ Error creando WebSocket: ${error}`);
                     this.isReconnecting = false;
                     this.scheduleReconnect();
+                }
+            }
+
+            handleServerMessage(message) {
+                // Aquí puedes manejar respuestas específicas del servidor
+                if (message.includes('relay') || message.includes('Relé')) {
+                    this.log(`🔌 Respuesta del servidor: ${message}`);
                 }
             }
 
@@ -349,7 +545,6 @@
                     this.reconnectAttempts++;
                     this.reconnectCountEl.textContent = this.reconnectAttempts;
 
-                    // Backoff exponencial pero limitado
                     const delay = Math.min(this.reconnectInterval * Math.pow(1.2, this.reconnectAttempts), 10000);
 
                     this.log(`🔄 Reintentando en ${(delay / 1000).toFixed(1)}s... (intento ${this.reconnectAttempts})`);
@@ -359,7 +554,7 @@
                     }, delay);
                 } else {
                     this.log(`❌ Máximo de intentos alcanzado (${this.maxReconnectAttempts})`);
-                    this.updateStatus('disconnected', 'Conexión fallida - Usar botón Reconectar');
+                    this.updateStatus('disconnected', '🔴 Conexión fallida - Usar botón Reconectar');
                 }
             }
 
@@ -368,7 +563,6 @@
                     this.log('🔍 Conexión perdida - reconectando inmediatamente...');
                     this.connect();
                 } else if (this.isConnected()) {
-                    // Verificar con ping
                     try {
                         this.socket.send('ping');
                         this.log('🔍 Verificando conexión...');
@@ -404,10 +598,53 @@
                 }
             }
 
+            enableRelayButtons(enabled) {
+                const buttons = document.querySelectorAll('.relay-button');
+                buttons.forEach(button => {
+                    button.disabled = !enabled;
+                });
+            }
+
+            activateRelay(relayNumber) {
+                if (this.sendMessage(relayNumber.toString())) {
+                    this.setRelayState(relayNumber, true);
+                    this.log(`🔌 Relé ${relayNumber} activado por 5 segundos`);
+
+                    // Simular el temporizador del relé (5 segundos)
+                    if (this.relayTimers[relayNumber - 1]) {
+                        clearTimeout(this.relayTimers[relayNumber - 1]);
+                    }
+
+                    this.relayTimers[relayNumber - 1] = setTimeout(() => {
+                        this.setRelayState(relayNumber, false);
+                        this.log(`🔌 Relé ${relayNumber} desactivado automáticamente`);
+                    }, 5000);
+                }
+            }
+
+            setRelayState(relayNumber, active) {
+                this.relayStates[relayNumber - 1] = active;
+                const statusEl = document.getElementById(`relay${relayNumber}Status`);
+
+                if (active) {
+                    statusEl.textContent = 'Activo (5s)';
+                    statusEl.className = 'relay-status relay-active';
+                } else {
+                    statusEl.textContent = 'Inactivo';
+                    statusEl.className = 'relay-status relay-inactive';
+                }
+
+                this.updateActiveRelaysCount();
+            }
+
+            updateActiveRelaysCount() {
+                const activeCount = this.relayStates.filter(state => state).length;
+                this.activeRelaysEl.textContent = activeCount;
+            }
+
             updateStatus(type, message) {
                 this.statusEl.className = `status ${type}`;
                 this.statusEl.textContent = message;
-                this.ledBtn.disabled = (type !== 'connected');
             }
 
             updateUI() {
@@ -418,9 +655,8 @@
 
                 if (this.lastPingTime) {
                     const timeSince = Math.floor((Date.now() - this.lastPingTime) / 1000);
-                    this.lastPingEl.textContent = `${timeSince}s ago`;
+                    this.lastPingEl.textContent = `${timeSince}s`;
 
-                    // Si hace mucho que no hay ping, verificar conexión
                     if (timeSince > 30 && this.isConnected()) {
                         this.log('⚠️ Mucho tiempo sin respuesta - verificando...');
                         this.checkConnection();
@@ -461,8 +697,8 @@
         const wsManager = new WebSocketManager("ws://192.168.1.159:8765");
 
         // Funciones globales para los botones
-        function sendMessage(msg) {
-            wsManager.sendMessage(msg);
+        function activateRelay(relayNumber) {
+            wsManager.activateRelay(relayNumber);
         }
 
         function toggleConnection() {
@@ -474,14 +710,48 @@
             logContainer.classList.toggle('hidden');
         }
 
-        // Wake lock mejorado
+        function testLed() {
+            wsManager.sendMessage('led');
+        }
+
+        function testAllRelays() {
+            if (!wsManager.isConnected()) {
+                wsManager.log('❌ No conectado - no se puede ejecutar test secuencial');
+                return;
+            }
+
+            wsManager.log('🔄 Iniciando test secuencial de todos los relés...');
+
+            // Activar relés en secuencia con delay
+            setTimeout(() => activateRelay(1), 0);
+            setTimeout(() => activateRelay(2), 1000);
+            setTimeout(() => activateRelay(3), 2000);
+            setTimeout(() => activateRelay(4), 3000);
+        }
+
+        function emergencyStop() {
+            if (confirm('⚠️ ¿Está seguro de que desea ejecutar la parada de emergencia?\n\nEsto reiniciará el ESP32.')) {
+                wsManager.log('🚨 PARADA DE EMERGENCIA ACTIVADA');
+                wsManager.sendMessage('emergency_stop');
+
+                // Reiniciar estados locales
+                for (let i = 1; i <= 4; i++) {
+                    wsManager.setRelayState(i, false);
+                    if (wsManager.relayTimers[i - 1]) {
+                        clearTimeout(wsManager.relayTimers[i - 1]);
+                        wsManager.relayTimers[i - 1] = null;
+                    }
+                }
+            }
+        }
+
+        // Wake lock para mantener la pantalla activa
         let wakeLock = null;
         if ('wakeLock' in navigator) {
             navigator.wakeLock.request('screen').then(lock => {
                 wakeLock = lock;
                 console.log('Wake lock activado');
 
-                // Renovar wake lock cuando se pierde
                 lock.addEventListener('release', () => {
                     console.log('Wake lock liberado, renovando...');
                     if (document.visibilityState === 'visible') {
@@ -494,6 +764,12 @@
                 console.log('Wake lock no disponible:', err);
             });
         }
+
+        // Mostrar información de conexión al cargar
+        window.addEventListener('load', () => {
+            wsManager.log('🚀 Interfaz de control cargada');
+            wsManager.log('📡 Intentando conectar al ESP32...');
+        });
     </script>
 
 </body>

@@ -12,6 +12,12 @@ async def handler(websocket):
             print(f"📩 Mensaje recibido: {message}")
             if message == "2":
                 await enviar_a_todos(message, exclude=websocket)
+            if message == "1":
+                await enviar_a_todos(message, exclude=websocket)
+            if message == "3":
+                await enviar_a_todos(message, exclude=websocket)
+            if message == "4":
+                await enviar_a_todos(message, exclude=websocket)
     except (ConnectionClosedError, ConnectionClosedOK) as e:
         print(f"⚠️ Cliente desconectado inesperadamente: {e}")
     except Exception as e:
