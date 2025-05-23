@@ -8,6 +8,11 @@ const uint16_t websocket_port = 8765;
 
 WebSocketsClient webSocket;
 
+// Pines GPIO para los relevadores
+#define RELAY_1 16
+#define RELAY_2 17
+#define RELAY_3 18
+#define RELAY_4 19
 #define LED_PIN 2
 
 // Variables de conexión
@@ -19,20 +24,85 @@ unsigned long lastHeartbeat = 0;
 bool isConnected = false;
 bool wifiWasConnected = true;
 
-// Variables para parpadeo
+// Variables para parpadeo del LED de estado
 bool blinkOnConnect = false;
 unsigned long blinkStartTime = 0;
 int blinkCount = 0;
 bool ledState = LOW;
 
-// Variables para mantener el LED encendido
-bool keepLedOn = false;
-unsigned long ledOnStartTime = 0;
+// Variables para controlar relés por tiempo
+bool relayTimers[4] = {false, false, false, false};
+unsigned long relayStartTimes[4] = {0, 0, 0, 0};
+const unsigned long RELAY_ON_DURATION = 5000; // 5 segundos
 
 // Variables para watchdog y health check
 unsigned long lastLoopTime = 0;
 unsigned long connectionStartTime = 0;
 int reconnectAttempts = 0;
+
+// Función para inicializar relés
+void initRelays() {
+  pinMode(RELAY_1, OUTPUT);
+  pinMode(RELAY_2, OUTPUT);
+  pinMode(RELAY_3, OUTPUT);
+  pinMode(RELAY_4, OUTPUT);
+  
+  // Apagar todos los relevadores al inicio (HIGH si son activos en LOW)
+  digitalWrite(RELAY_1, HIGH);
+  digitalWrite(RELAY_2, HIGH);
+  digitalWrite(RELAY_3, HIGH);
+  digitalWrite(RELAY_4, HIGH);
+  
+  Serial.println("[RELAY] Todos los relés inicializados y apagados");
+}
+
+// Función para activar un relé específico
+void activateRelay(int relayNumber) {
+  if (relayNumber < 1 || relayNumber > 4) {
+    Serial.printf("[RELAY] Número de relé inválido: %d\n", relayNumber);
+    return;
+  }
+  
+  int relayPin;
+  switch (relayNumber) {
+    case 1: relayPin = RELAY_1; break;
+    case 2: relayPin = RELAY_2; break;
+    case 3: relayPin = RELAY_3; break;
+    case 4: relayPin = RELAY_4; break;
+    default: return;
+  }
+  
+  // Activar el relé (LOW para activar)
+  digitalWrite(relayPin, LOW);
+  relayTimers[relayNumber - 1] = true;
+  relayStartTimes[relayNumber - 1] = millis();
+  
+  Serial.printf("[RELAY] Relé %d activado por %lu ms\n", relayNumber, RELAY_ON_DURATION);
+}
+
+// Función para manejar los temporizadores de los relés
+void handleRelayTimers() {
+  unsigned long currentMillis = millis();
+  
+  for (int i = 0; i < 4; i++) {
+    if (relayTimers[i]) {
+      if (currentMillis - relayStartTimes[i] >= RELAY_ON_DURATION) {
+        // Apagar el relé (HIGH para desactivar)
+        int relayPin;
+        switch (i) {
+          case 0: relayPin = RELAY_1; break;
+          case 1: relayPin = RELAY_2; break;
+          case 2: relayPin = RELAY_3; break;
+          case 3: relayPin = RELAY_4; break;
+        }
+        
+        digitalWrite(relayPin, HIGH);
+        relayTimers[i] = false;
+        Serial.printf("[RELAY] Relé %d desactivado\n", i + 1);
+      }
+    }
+  }
+}
 
 // Evento del WebSocket
 void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
@@ -64,14 +134,39 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       break;
      
     case WStype_TEXT:
-      Serial.printf("[WebSocket] Mensaje recibido: %s\n", payload);
-      lastHeartbeat = millis(); // Actualizar heartbeat en cualquier mensaje
-      
-      if (strcmp((char*)payload, "2") == 0) {
-        keepLedOn = true;
-        ledOnStartTime = millis();
-        digitalWrite(LED_PIN, HIGH);
-        Serial.println("[APP] Comando '2' recibido - LED encendido");
+      {
+        Serial.printf("[WebSocket] Mensaje recibido: %s\n", payload);
+        lastHeartbeat = millis(); // Actualizar heartbeat en cualquier mensaje
+        
+        // Procesar comandos para relés
+        String command = String((char*)payload);
+        
+        if (command == "1") {
+          activateRelay(1);
+          Serial.println("[APP] Comando '1' recibido - Relé 1 activado");
+        }
+        else if (command == "2") {
+          activateRelay(2);
+          Serial.println("[APP] Comando '2' recibido - Relé 2 activado");
+        }
+        else if (command == "3") {
+          activateRelay(3);
+          Serial.println("[APP] Comando '3' recibido - Relé 3 activado");
+        }
+        else if (command == "4") {
+          activateRelay(4);
+          Serial.println("[APP] Comando '4' recibido - Relé 4 activado");
+        }
+        else if (command == "led") {
+          // Comando especial para el LED de estado
+          digitalWrite(LED_PIN, HIGH);
+          delay(100);
+          digitalWrite(LED_PIN, LOW);
+          Serial.println("[APP] Comando 'led' recibido - LED parpadeado");
+        }
+        else {
+          Serial.printf("[APP] Comando desconocido: %s\n", command.c_str());
+        }
       }
       break;
      
@@ -205,16 +300,27 @@ void printStatus() {
     Serial.printf("Último heartbeat: hace %lu ms\n", currentMillis - lastHeartbeat);
     Serial.printf("Último pong: hace %lu ms\n", currentMillis - lastPongTime);
     Serial.printf("Intentos reconexión: %d\n", reconnectAttempts);
+    
+    // Estado de los relés
+    Serial.print("Relés activos: ");
+    for (int i = 0; i < 4; i++) {
+      if (relayTimers[i]) {
+        Serial.printf("R%d ", i + 1);
+      }
+    }
+    Serial.println();
     Serial.println("==================\n");
   }
 }
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("\n=== ESP32 WebSocket Client v2.0 ===");
+  Serial.println("\n=== ESP32 WebSocket Client con 4 Relés v1.0 ===");
   
+  // Inicializar LED de estado y relés
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
+  initRelays();
   
   // Configuraciones WiFi adicionales para estabilidad
   WiFi.mode(WIFI_STA);
@@ -268,8 +374,11 @@ void loop() {
     isConnected = false;
   }
   
+  // Manejar temporizadores de relés
+  handleRelayTimers();
+  
   // Parpadeo al conectar (3 veces)
-  if (blinkOnConnect && !keepLedOn) {
+  if (blinkOnConnect) {
     if (currentMillis - blinkStartTime >= 200) {
       blinkStartTime = currentMillis;
       ledState = !ledState;
@@ -282,15 +391,6 @@ void loop() {
           Serial.println("[LED] Parpadeo de conexión completado");
         }
       }
-    }
-  }
-  
-  // LED encendido por 5s tras recibir "2"
-  if (keepLedOn) {
-    if (currentMillis - ledOnStartTime >= 5000) {
-      digitalWrite(LED_PIN, LOW);
-      Serial.println("[APP] Comando ejecutado - LED apagado");
-      keepLedOn = false;
     }
   }
   
