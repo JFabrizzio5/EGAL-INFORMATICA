@@ -96,6 +96,12 @@
         .hidden {
             display: none;
         }
+
+        .connection-timeout {
+            background-color: #e74c3c;
+            color: white;
+            border: 1px solid #c0392b;
+        }
     </style>
 </head>
 
@@ -145,13 +151,16 @@
                 this.url = url;
                 this.socket = null;
                 this.reconnectAttempts = 0;
-                this.maxReconnectAttempts = 50;
-                this.reconnectInterval = 2000; // 2 segundos inicial
-                this.heartbeatInterval = 10000; // 10 segundos
+                this.maxReconnectAttempts = 100; // Más intentos
+                this.reconnectInterval = 1000; // 1 segundo inicial (más rápido)
+                this.heartbeatInterval = 5000; // 5 segundos (más frecuente)
                 this.heartbeatTimer = null;
                 this.reconnectTimer = null;
                 this.connectionStartTime = null;
                 this.lastPingTime = null;
+                this.connectionTimeout = null;
+                this.isReconnecting = false;
+                this.connectionTimeoutDuration = 5000; // 5 segundos timeout para conexión
 
                 // UI elements
                 this.statusEl = document.getElementById('status');
@@ -161,91 +170,165 @@
                 this.lastPingEl = document.getElementById('lastPing');
                 this.uptimeEl = document.getElementById('uptime');
 
-                // Event handlers para visibilidad
+                // Event handlers mejorados
                 this.setupVisibilityHandlers();
+                this.setupNetworkHandlers();
 
                 // Iniciar conexión
                 this.connect();
 
                 // Actualizar UI cada segundo
                 setInterval(() => this.updateUI(), 1000);
+
+                // Verificar conexión cada 30 segundos
+                setInterval(() => this.periodicConnectionCheck(), 30000);
             }
 
             setupVisibilityHandlers() {
                 // Detectar cuando la página se oculta/muestra
                 document.addEventListener('visibilitychange', () => {
                     if (!document.hidden) {
-                        // Página visible otra vez
-                        this.log('Página visible - verificando conexión...');
-                        this.checkConnection();
+                        this.log('📱 Página visible - forzando reconexión...');
+                        setTimeout(() => this.forceReconnect(), 500);
                     } else {
-                        this.log('Página oculta - manteniendo conexión...');
+                        this.log('📱 Página oculta');
                     }
                 });
 
                 // Detectar cuando la ventana pierde/gana foco
                 window.addEventListener('focus', () => {
-                    this.log('Ventana en foco - verificando conexión...');
-                    this.checkConnection();
+                    this.log('🔍 Ventana en foco - forzando reconexión...');
+                    setTimeout(() => this.forceReconnect(), 500);
                 });
 
                 window.addEventListener('blur', () => {
-                    this.log('Ventana sin foco');
+                    this.log('😴 Ventana sin foco');
+                });
+
+                // Detectar cuando se hace clic en la página (usuario activo)
+                document.addEventListener('click', () => {
+                    if (!this.isConnected()) {
+                        this.log('👆 Usuario activo - verificando conexión...');
+                        this.checkConnection();
+                    }
                 });
             }
 
+            setupNetworkHandlers() {
+                // Detectar cambios en la conectividad de red
+                window.addEventListener('online', () => {
+                    this.log('🌐 Red disponible - reconectando...');
+                    setTimeout(() => this.forceReconnect(), 1000);
+                });
+
+                window.addEventListener('offline', () => {
+                    this.log('📡 Red perdida');
+                    this.updateStatus('disconnected', 'Sin conexión a internet');
+                });
+            }
+
+            isConnected() {
+                return this.socket && this.socket.readyState === WebSocket.OPEN;
+            }
+
             connect() {
+                // Si ya hay una conexión activa o en progreso, no hacer nada
                 if (this.socket && (this.socket.readyState === WebSocket.CONNECTING ||
                     this.socket.readyState === WebSocket.OPEN)) {
                     return;
                 }
 
-                this.log(`Conectando a ${this.url}...`);
+                // Limpiar socket anterior
+                if (this.socket) {
+                    this.socket.onopen = null;
+                    this.socket.onclose = null;
+                    this.socket.onerror = null;
+                    this.socket.onmessage = null;
+                }
+
+                this.isReconnecting = true;
+                this.log(`🔄 Conectando a ${this.url}... (intento ${this.reconnectAttempts + 1})`);
                 this.updateStatus('connecting', 'Conectando...');
+
+                // Timeout para la conexión
+                this.connectionTimeout = setTimeout(() => {
+                    if (this.socket && this.socket.readyState === WebSocket.CONNECTING) {
+                        this.log('⏰ Timeout de conexión - cancelando...');
+                        this.socket.close();
+                        this.updateStatus('connection-timeout', 'Timeout de conexión');
+                        this.scheduleReconnect();
+                    }
+                }, this.connectionTimeoutDuration);
 
                 try {
                     this.socket = new WebSocket(this.url);
 
                     this.socket.onopen = () => {
+                        this.clearConnectionTimeout();
                         this.log('✅ Conectado al WebSocket');
                         this.updateStatus('connected', 'Conectado');
                         this.connectionStartTime = Date.now();
                         this.reconnectAttempts = 0;
-                        this.reconnectInterval = 2000; // Reset interval
+                        this.reconnectInterval = 1000; // Reset interval
+                        this.isReconnecting = false;
                         this.startHeartbeat();
                     };
 
                     this.socket.onmessage = (event) => {
                         this.log(`📨 Mensaje recibido: ${event.data}`);
-                        this.lastPingTime = Date.now(); // Actualizar en cualquier mensaje
+                        this.lastPingTime = Date.now();
                     };
 
                     this.socket.onclose = (event) => {
-                        this.log(`❌ Conexión cerrada (código: ${event.code})`);
+                        this.clearConnectionTimeout();
+                        this.log(`❌ Conexión cerrada (código: ${event.code}, razón: ${event.reason || 'Sin razón'})`);
                         this.updateStatus('disconnected', 'Desconectado');
                         this.stopHeartbeat();
-                        this.scheduleReconnect();
+                        this.isReconnecting = false;
+
+                        // Reconectar inmediatamente si no fue manual
+                        if (event.code !== 1000) { // 1000 = cierre normal
+                            this.scheduleReconnect();
+                        }
                     };
 
                     this.socket.onerror = (error) => {
+                        this.clearConnectionTimeout();
                         this.log(`❌ Error en WebSocket: ${error}`);
                         this.updateStatus('disconnected', 'Error de conexión');
+                        this.isReconnecting = false;
                     };
 
                 } catch (error) {
+                    this.clearConnectionTimeout();
                     this.log(`❌ Error creando WebSocket: ${error}`);
+                    this.isReconnecting = false;
                     this.scheduleReconnect();
+                }
+            }
+
+            clearConnectionTimeout() {
+                if (this.connectionTimeout) {
+                    clearTimeout(this.connectionTimeout);
+                    this.connectionTimeout = null;
                 }
             }
 
             startHeartbeat() {
                 this.stopHeartbeat();
                 this.heartbeatTimer = setInterval(() => {
-                    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                        // Enviar ping silencioso (el servidor ESP32 lo detectará)
-                        this.socket.send('ping');
-                        this.lastPingTime = Date.now();
-                        this.log('🏓 Heartbeat enviado');
+                    if (this.isConnected()) {
+                        try {
+                            this.socket.send('ping');
+                            this.lastPingTime = Date.now();
+                            this.log('🏓 Heartbeat enviado');
+                        } catch (error) {
+                            this.log(`❌ Error enviando heartbeat: ${error}`);
+                            this.checkConnection();
+                        }
+                    } else {
+                        this.log('💔 Heartbeat falló - conexión perdida');
+                        this.checkConnection();
                     }
                 }, this.heartbeatInterval);
             }
@@ -266,38 +349,57 @@
                     this.reconnectAttempts++;
                     this.reconnectCountEl.textContent = this.reconnectAttempts;
 
-                    const delay = Math.min(this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts), 30000);
+                    // Backoff exponencial pero limitado
+                    const delay = Math.min(this.reconnectInterval * Math.pow(1.2, this.reconnectAttempts), 10000);
 
-                    this.log(`🔄 Reintentando en ${delay / 1000}s... (intento ${this.reconnectAttempts})`);
+                    this.log(`🔄 Reintentando en ${(delay / 1000).toFixed(1)}s... (intento ${this.reconnectAttempts})`);
 
                     this.reconnectTimer = setTimeout(() => {
                         this.connect();
                     }, delay);
                 } else {
                     this.log(`❌ Máximo de intentos alcanzado (${this.maxReconnectAttempts})`);
-                    this.updateStatus('disconnected', 'Conexión fallida - Recargar página');
+                    this.updateStatus('disconnected', 'Conexión fallida - Usar botón Reconectar');
                 }
             }
 
             checkConnection() {
-                if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-                    this.log('🔍 Conexión perdida - reconectando...');
+                if (!this.isConnected() && !this.isReconnecting) {
+                    this.log('🔍 Conexión perdida - reconectando inmediatamente...');
                     this.connect();
-                } else {
-                    // Enviar ping para verificar
-                    this.socket.send('ping');
-                    this.log('🔍 Verificando conexión...');
+                } else if (this.isConnected()) {
+                    // Verificar con ping
+                    try {
+                        this.socket.send('ping');
+                        this.log('🔍 Verificando conexión...');
+                    } catch (error) {
+                        this.log(`❌ Error verificando conexión: ${error}`);
+                        this.connect();
+                    }
+                }
+            }
+
+            periodicConnectionCheck() {
+                if (!this.isConnected() && !this.isReconnecting) {
+                    this.log('⏰ Verificación periódica - reconectando...');
+                    this.connect();
                 }
             }
 
             sendMessage(message) {
-                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                    this.socket.send(message);
-                    this.log(`📤 Enviado: ${message}`);
-                    return true;
+                if (this.isConnected()) {
+                    try {
+                        this.socket.send(message);
+                        this.log(`📤 Enviado: ${message}`);
+                        return true;
+                    } catch (error) {
+                        this.log(`❌ Error enviando mensaje: ${error}`);
+                        this.checkConnection();
+                        return false;
+                    }
                 } else {
-                    this.log(`❌ No se puede enviar: conexión no disponible`);
-                    this.checkConnection(); // Intentar reconectar
+                    this.log('❌ No se puede enviar: conexión no disponible');
+                    this.checkConnection();
                     return false;
                 }
             }
@@ -305,22 +407,24 @@
             updateStatus(type, message) {
                 this.statusEl.className = `status ${type}`;
                 this.statusEl.textContent = message;
-
-                // Habilitar/deshabilitar botones
                 this.ledBtn.disabled = (type !== 'connected');
             }
 
             updateUI() {
-                // Actualizar uptime
                 if (this.connectionStartTime) {
                     const uptime = Math.floor((Date.now() - this.connectionStartTime) / 1000);
                     this.uptimeEl.textContent = `${uptime}s`;
                 }
 
-                // Actualizar último ping
                 if (this.lastPingTime) {
                     const timeSince = Math.floor((Date.now() - this.lastPingTime) / 1000);
                     this.lastPingEl.textContent = `${timeSince}s ago`;
+
+                    // Si hace mucho que no hay ping, verificar conexión
+                    if (timeSince > 30 && this.isConnected()) {
+                        this.log('⚠️ Mucho tiempo sin respuesta - verificando...');
+                        this.checkConnection();
+                    }
                 }
             }
 
@@ -329,24 +433,27 @@
                 const logEntry = `[${timestamp}] ${message}`;
                 console.log(logEntry);
 
-                // Agregar al log visual
                 this.logEl.innerHTML += logEntry + '<br>';
                 this.logEl.scrollTop = this.logEl.scrollHeight;
 
-                // Limitar entradas del log
                 const lines = this.logEl.innerHTML.split('<br>');
-                if (lines.length > 50) {
-                    this.logEl.innerHTML = lines.slice(-50).join('<br>');
+                if (lines.length > 100) {
+                    this.logEl.innerHTML = lines.slice(-100).join('<br>');
                 }
             }
 
             forceReconnect() {
-                this.log('🔄 Reconexión forzada por usuario');
+                this.log('🔄 Reconexión forzada');
+                this.clearConnectionTimeout();
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                }
                 if (this.socket) {
                     this.socket.close();
                 }
                 this.reconnectAttempts = 0;
-                this.connect();
+                this.isReconnecting = false;
+                setTimeout(() => this.connect(), 100);
             }
         }
 
@@ -367,19 +474,28 @@
             logContainer.classList.toggle('hidden');
         }
 
-        // Prevenir que la página se "duerma" en algunos navegadores móviles
+        // Wake lock mejorado
         let wakeLock = null;
-
-        // Intentar mantener la pantalla activa (si está soportado)
         if ('wakeLock' in navigator) {
             navigator.wakeLock.request('screen').then(lock => {
                 wakeLock = lock;
                 console.log('Wake lock activado');
+
+                // Renovar wake lock cuando se pierde
+                lock.addEventListener('release', () => {
+                    console.log('Wake lock liberado, renovando...');
+                    if (document.visibilityState === 'visible') {
+                        navigator.wakeLock.request('screen').then(newLock => {
+                            wakeLock = newLock;
+                        }).catch(err => console.log('Error renovando wake lock:', err));
+                    }
+                });
             }).catch(err => {
                 console.log('Wake lock no disponible:', err);
             });
         }
     </script>
+
 </body>
 
 </html>
