@@ -9,3 +9,4 @@ https://excalidraw.com/#json=1ileJNnYIQny89lKNUdzB,BsVsGyaMdIsOChlHQxhQ2w
 ![Descripción de la imagen](Proyecto.png) 
 
 #Aca colocar algunas partes del marco teorico
+https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
