@@ -10,3 +10,4 @@ https://excalidraw.com/#json=1ileJNnYIQny89lKNUdzB,BsVsGyaMdIsOChlHQxhQ2w
 
 #Aca colocar algunas partes del marco teorico
 https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
+Todo lo necesario del proyecto se documentara  aca
