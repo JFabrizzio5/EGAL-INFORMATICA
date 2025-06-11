@@ -1,4 +1,4 @@
-Como deberia quedar mi main de python si genero modulos asi import os
+import os
 
 def capitalize_and_clean_folder_name(name):
     """Convierte el nombre de la carpeta a formato Capitalizado y elimina espacios."""
