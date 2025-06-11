@@ -5,10 +5,11 @@ from pydantic import BaseModel
 class UserCreateRequest(BaseModel):
     name: str
     email: str
-    age: int
+    password: str
 
 class UserResponse(BaseModel):
     id: str
     name: str
     email: str
-    age: int
+
+
