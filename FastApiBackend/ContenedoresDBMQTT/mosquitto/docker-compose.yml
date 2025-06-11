@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mosquitto:
@@ -11,4 +11,10 @@ services:
       - ./config:/mosquitto/config
       - ./data:/mosquitto/data
       - ./log:/mosquitto/log
+    networks:
+      - mqtt_network
     restart: unless-stopped
+
+networks:
+  mqtt_network:
+    driver: bridge

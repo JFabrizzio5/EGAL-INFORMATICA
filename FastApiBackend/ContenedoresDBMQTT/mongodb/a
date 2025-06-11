@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27019:27017"
+    environment:
+      - MONGO_INITDB_BIND_IP=0.0.0.0 # Permite conexiones desde cualquier IP externa
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+networks:
+  mongo_network:
+    driver: bridge # Configura la red en modo bridge para permitir la comunicación entre contenedores
+volumes:
+  mongodb_data:
+    driver: local # Volumen persistente para los datos

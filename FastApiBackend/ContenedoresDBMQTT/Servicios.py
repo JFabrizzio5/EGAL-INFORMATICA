@@ -3,7 +3,7 @@ import subprocess
 SERVICES = {
     "mosquitto": "mosquitto/docker-compose.yml",
     "redis": "redis/docker-compose.yml",
-    "mongo": "mongo/docker-compose.yml"
+    "mongo": "mongodb/docker-compose.yml"
 }
 
 def run_compose(service, command):

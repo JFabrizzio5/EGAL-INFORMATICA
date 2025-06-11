@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  fastapi:
+    build: .
+    container_name: fastapi_app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    command: /venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-keep-alive 660 --reload --reload-dir /app
+    networks:
+      - app_network # Red privada de FastAPI
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge
