@@ -1,20 +1,14 @@
 # Dockerfile
 FROM node:20
 
-# Instala expo-cli
-RUN npm install -g expo-cli
+WORKDIR /app
 
-# Crea carpeta de la app
-WORKDIR /EgalApp
+COPY package.json yarn.lock* package-lock.json* ./
 
-# Copia los archivos del proyecto
-COPY . .
-
-# Instala las dependencias del proyecto
 RUN npm install
 
-# Expone el puerto 19000 (Expo)
-EXPOSE 19000
+COPY . .
 
-# Comando por defecto
+EXPOSE 19000 19001 19002 19006
+
 CMD ["npx", "expo", "start", "--tunnel"]

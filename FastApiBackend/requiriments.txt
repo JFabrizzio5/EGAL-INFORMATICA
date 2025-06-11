@@ -1,0 +1,8 @@
+uvicorn
+motor
+python-dotenv
+fastapi[all]
+logger
+pyjwt
+redis
+gmqtt
