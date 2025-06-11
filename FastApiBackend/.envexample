@@ -1,0 +1,5 @@
+MQTT_HOST=172.22.82.26
+MQTT_PORT=1883
+MQTT_CLIENT_ID=mi_cliente_mqtt
+MONGO_URI=mongodb://172.22.82.26:27019/
+MongoUrl=mongodb://172.22.82.26:27019/
