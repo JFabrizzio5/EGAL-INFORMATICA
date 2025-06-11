@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Receptor de Eventos MQTT</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+
+<body>
+    <h1>Receptor de Eventos MQTT</h1>
+    <div id="messages"></div>
+
+    <script>
+        const clientId = "receiver-" + Math.floor(Math.random() * 1000);
+        const client = mqtt.connect("ws://172.22.82.26:9001", {
+            clientId: clientId
+        });
+
+        const topic = "egal/eventos";
+
+        client.on("connect", () => {
+            console.log("Conectado al broker MQTT como", clientId);
+            client.subscribe(topic, (err) => {
+                if (!err) {
+                    console.log(`Suscrito al topic: ${topic}`);
+                }
+            });
+        });
+
+        client.on("message", (topic, message) => {
+            const messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML += `<p><strong>${topic}:</strong> ${message.toString()}</p>`;
+        });
+    </script>
+</body>
+
+</html>

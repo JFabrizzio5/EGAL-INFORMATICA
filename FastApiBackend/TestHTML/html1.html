@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Emisor de Eventos WebSocket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .connecting {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        input[type="text"] {
+            width: 300px;
+            padding: 8px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        #messages {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Emisor de Eventos WebSocket</h1>
+
+    <div id="status" class="status disconnected">Desconectado</div>
+
+    <div>
+        <input id="message" type="text" placeholder="Escribe tu evento aquí" />
+        <button onclick="sendMessage()">Enviar Evento</button>
+        <button onclick="reconnect()">Reconectar</button>
+    </div>
+
+    <div>
+        <h3>Mensajes:</h3>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let clientId = "emitter-" + Math.floor(Math.random() * 10000);
+        let reconnectAttempts = 0;
+        let maxReconnectAttempts = 5;
+        let reconnectInterval = 2000; // 2 segundos
+
+        function updateStatus(message, className) {
+            const statusDiv = document.getElementById("status");
+            statusDiv.textContent = message;
+            statusDiv.className = "status " + className;
+        }
+
+        function addMessage(message) {
+            const messagesDiv = document.getElementById("messages");
+            const timestamp = new Date().toLocaleTimeString();
+            messagesDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function connect() {
+            if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+                return; // Ya está conectado o conectando
+            }
+
+            updateStatus(`Conectando como ${clientId}...`, "connecting");
+
+            // Usar la IP y puerto correctos
+            ws = new WebSocket(`ws://172.22.82.26:8000/ws/${clientId}`);
+
+            ws.onopen = () => {
+                updateStatus(`Conectado como ${clientId}`, "connected");
+                addMessage("✅ Conexión WebSocket establecida");
+                reconnectAttempts = 0; // Reset counter on successful connection
+            };
+
+            ws.onmessage = (event) => {
+                console.log("Mensaje recibido del servidor: ", event.data);
+                addMessage(`📨 Servidor: ${event.data}`);
+            };
+
+            ws.onclose = (event) => {
+                updateStatus("Desconectado", "disconnected");
+                addMessage(`❌ Conexión cerrada (Código: ${event.code})`);
+
+                // Auto-reconexión si no fue intencional
+                if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+                    setTimeout(() => {
+                        reconnectAttempts++;
+                        addMessage(`🔄 Reintentando conexión (${reconnectAttempts}/${maxReconnectAttempts})...`);
+                        connect();
+                    }, reconnectInterval);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error("Error WebSocket:", error);
+                addMessage("❌ Error en la conexión WebSocket");
+                updateStatus("Error de conexión", "disconnected");
+            };
+
+            // Heartbeat para mantener la conexión viva
+            setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+                }
+            }, 30000); // Ping cada 30 segundos
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById("message");
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                alert("Por favor escribe un mensaje");
+                return;
+            }
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(message);
+                addMessage(`📤 Enviado: ${message}`);
+                messageInput.value = "";
+            } else {
+                alert("WebSocket no está conectado. Intentando reconectar...");
+                connect();
+            }
+        }
+
+        function reconnect() {
+            if (ws) {
+                ws.close(1000, "Reconexión manual"); // Cierre intencional
+            }
+            reconnectAttempts = 0;
+            setTimeout(connect, 500);
+        }
+
+        // Permitir enviar mensaje con Enter
+        document.getElementById("message").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        // Conectar automáticamente al cargar la página
+        connect();
+
+        // Manejar la visibilidad de la página para reconectar si es necesario
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden && ws && ws.readyState === WebSocket.CLOSED) {
+                addMessage("🔄 Página visible de nuevo, reconectando...");
+                connect();
+            }
+        });
+    </script>
+</body>
+
+</html>
