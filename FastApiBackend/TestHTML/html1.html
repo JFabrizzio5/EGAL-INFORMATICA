@@ -1,194 +1,179 @@
-<!DOCTYPE html>
-<html>
+import React, { useState, useEffect, useRef } from "react";
+import {
+SafeAreaView,
+View,
+Text,
+TextInput,
+Button,
+ScrollView,
+StyleSheet,
+KeyboardAvoidingView,
+Platform,
+} from "react-native";
 
-<head>
-    <title>Emisor de Eventos WebSocket</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+const App = () => {
+const [status, setStatus] = useState("Desconectado");
+const [statusClass, setStatusClass] = useState("disconnected");
+const [message, setMessage] = useState("");
+const [messages, setMessages] = useState([]);
+const wsRef = useRef(null);
+const reconnectAttemptsRef = useRef(0);
+const maxReconnectAttempts = 5;
+const clientId = useRef(`emitter-${Math.floor(Math.random() * 10000)}`);
+const scrollRef = useRef(null);
 
-        .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-weight: bold;
-        }
+useEffect(() => {
+connectWebSocket();
 
-        .connected {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
+const interval = setInterval(() => {
+if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+wsRef.current.send(JSON.stringify({ type: "ping", timestamp: Date.now() }));
+}
+}, 30000); // Ping cada 30s
 
-        .disconnected {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
+return () => {
+clearInterval(interval);
+wsRef.current?.close();
+};
+}, []);
 
-        .connecting {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
+const addMessage = (msg) => {
+setMessages((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+};
 
-        input[type="text"] {
-            width: 300px;
-            padding: 8px;
-            margin: 10px 0;
-        }
+const updateStatus = (msg, style) => {
+setStatus(msg);
+setStatusClass(style);
+};
 
-        button {
-            padding: 8px 16px;
-            margin: 5px;
-            cursor: pointer;
-        }
+const connectWebSocket = () => {
+if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING))
+{
+return;
+}
 
-        #messages {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            margin: 10px 0;
-            height: 200px;
-            overflow-y: auto;
-        }
-    </style>
-</head>
+updateStatus(`Conectando como ${clientId.current}...`, "connecting");
 
-<body>
-    <h1>Emisor de Eventos WebSocket</h1>
+const socket = new WebSocket(`ws://172.22.82.26:8000/ws/${clientId.current}`);
+wsRef.current = socket;
 
-    <div id="status" class="status disconnected">Desconectado</div>
+socket.onopen = () => {
+updateStatus(`Conectado como ${clientId.current}`, "connected");
+addMessage("✅ Conexión WebSocket establecida");
+reconnectAttemptsRef.current = 0;
+};
 
-    <div>
-        <input id="message" type="text" placeholder="Escribe tu evento aquí" />
-        <button onclick="sendMessage()">Enviar Evento</button>
-        <button onclick="reconnect()">Reconectar</button>
-    </div>
+socket.onmessage = (event) => {
+addMessage(`📨 Servidor: ${event.data}`);
+};
 
-    <div>
-        <h3>Mensajes:</h3>
-        <div id="messages"></div>
-    </div>
+socket.onclose = (event) => {
+updateStatus("Desconectado", "disconnected");
+addMessage(`❌ Conexión cerrada (Código: ${event.code})`);
+if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) { reconnectAttemptsRef.current++;
+    addMessage(`🔄 Reintentando conexión (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
+    setTimeout(connectWebSocket, 2000); } }; socket.onerror=(err)=> {
+    addMessage("❌ Error en la conexión WebSocket");
+    updateStatus("Error de conexión", "disconnected");
+    };
+    };
 
-    <script>
-        let ws = null;
-        let clientId = "emitter-" + Math.floor(Math.random() * 10000);
-        let reconnectAttempts = 0;
-        let maxReconnectAttempts = 5;
-        let reconnectInterval = 2000; // 2 segundos
+    const handleSend = () => {
+    if (!message.trim()) {
+    alert("Por favor escribe un mensaje");
+    return;
+    }
 
-        function updateStatus(message, className) {
-            const statusDiv = document.getElementById("status");
-            statusDiv.textContent = message;
-            statusDiv.className = "status " + className;
-        }
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+    wsRef.current.send(message);
+    addMessage(`📤 Enviado: ${message}`);
+    setMessage("");
+    } else {
+    alert("WebSocket no está conectado. Intentando reconectar...");
+    connectWebSocket();
+    }
+    };
 
-        function addMessage(message) {
-            const messagesDiv = document.getElementById("messages");
-            const timestamp = new Date().toLocaleTimeString();
-            messagesDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+    const reconnect = () => {
+    wsRef.current?.close(1000, "Reconexión manual");
+    reconnectAttemptsRef.current = 0;
+    setTimeout(connectWebSocket, 500);
+    };
 
-        function connect() {
-            if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
-                return; // Ya está conectado o conectando
-            }
+    return (
+    <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>Emisor de Eventos WebSocket</Text>
+        <Text style={[styles.status, styles[statusClass]]}>{status}</Text>
 
-            updateStatus(`Conectando como ${clientId}...`, "connecting");
+        <KeyboardAvoidingView behavior={Platform.OS==="ios" ? "padding" : undefined}>
+            <View style={styles.inputGroup}>
+                <TextInput value={message} onChangeText={setMessage} placeholder="Escribe tu evento aquí"
+                    style={styles.input} onSubmitEditing={handleSend} />
+                <View style={styles.buttonRow}>
+                    <Button title="Enviar Evento" onPress={handleSend} />
+                    <Button title="Reconectar" onPress={reconnect} />
+                </View>
+            </View>
+        </KeyboardAvoidingView>
 
-            // Usar la IP y puerto correctos
-            ws = new WebSocket(`ws://172.22.82.26:8000/ws/${clientId}`);
+        <Text style={styles.subtitle}>Mensajes:</Text>
+        <ScrollView ref={scrollRef} style={styles.messages}>
+            {messages.map((msg, i) => (
+            <Text key={i} style={styles.messageText}>{msg}</Text>
+            ))}
+        </ScrollView>
+    </SafeAreaView>
+    );
+    };
 
-            ws.onopen = () => {
-                updateStatus(`Conectado como ${clientId}`, "connected");
-                addMessage("✅ Conexión WebSocket establecida");
-                reconnectAttempts = 0; // Reset counter on successful connection
-            };
+    const styles = StyleSheet.create({
+    container: { flex: 1, padding: 20 },
+    title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 10 },
+    status: {
+    padding: 10,
+    marginVertical: 10,
+    borderRadius: 5,
+    fontWeight: "bold",
+    textAlign: "center",
+    },
+    connected: {
+    backgroundColor: "#d4edda",
+    color: "#155724",
+    borderColor: "#c3e6cb",
+    borderWidth: 1,
+    },
+    disconnected: {
+    backgroundColor: "#f8d7da",
+    color: "#721c24",
+    borderColor: "#f5c6cb",
+    borderWidth: 1,
+    },
+    connecting: {
+    backgroundColor: "#fff3cd",
+    color: "#856404",
+    borderColor: "#ffeaa7",
+    borderWidth: 1,
+    },
+    inputGroup: { marginBottom: 20 },
+    input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+    },
+    buttonRow: { flexDirection: "row", justifyContent: "space-between" },
+    subtitle: { fontSize: 18, fontWeight: "bold" },
+    messages: {
+    borderColor: "#dee2e6",
+    borderWidth: 1,
+    padding: 10,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 5,
+    flex: 1,
+    },
+    messageText: { marginVertical: 2 },
+    });
 
-            ws.onmessage = (event) => {
-                console.log("Mensaje recibido del servidor: ", event.data);
-                addMessage(`📨 Servidor: ${event.data}`);
-            };
-
-            ws.onclose = (event) => {
-                updateStatus("Desconectado", "disconnected");
-                addMessage(`❌ Conexión cerrada (Código: ${event.code})`);
-
-                // Auto-reconexión si no fue intencional
-                if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
-                    setTimeout(() => {
-                        reconnectAttempts++;
-                        addMessage(`🔄 Reintentando conexión (${reconnectAttempts}/${maxReconnectAttempts})...`);
-                        connect();
-                    }, reconnectInterval);
-                }
-            };
-
-            ws.onerror = (error) => {
-                console.error("Error WebSocket:", error);
-                addMessage("❌ Error en la conexión WebSocket");
-                updateStatus("Error de conexión", "disconnected");
-            };
-
-            // Heartbeat para mantener la conexión viva
-            setInterval(() => {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
-                }
-            }, 30000); // Ping cada 30 segundos
-        }
-
-        function sendMessage() {
-            const messageInput = document.getElementById("message");
-            const message = messageInput.value.trim();
-
-            if (!message) {
-                alert("Por favor escribe un mensaje");
-                return;
-            }
-
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(message);
-                addMessage(`📤 Enviado: ${message}`);
-                messageInput.value = "";
-            } else {
-                alert("WebSocket no está conectado. Intentando reconectar...");
-                connect();
-            }
-        }
-
-        function reconnect() {
-            if (ws) {
-                ws.close(1000, "Reconexión manual"); // Cierre intencional
-            }
-            reconnectAttempts = 0;
-            setTimeout(connect, 500);
-        }
-
-        // Permitir enviar mensaje con Enter
-        document.getElementById("message").addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                sendMessage();
-            }
-        });
-
-        // Conectar automáticamente al cargar la página
-        connect();
-
-        // Manejar la visibilidad de la página para reconectar si es necesario
-        document.addEventListener("visibilitychange", () => {
-            if (!document.hidden && ws && ws.readyState === WebSocket.CLOSED) {
-                addMessage("🔄 Página visible de nuevo, reconectando...");
-                connect();
-            }
-        });
-    </script>
-</body>
-
-</html>
+    export default App;
