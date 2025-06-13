@@ -250,14 +250,14 @@ const styles = StyleSheet.create({
   },
   doorCard: {
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 16,
     marginBottom: 16,
-    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   doorHeader: {
     flexDirection: 'row',
@@ -267,12 +267,13 @@ const styles = StyleSheet.create({
   },
   doorInfo: {
     flex: 1,
+    flexShrink: 1, // Permitir que se encoja si es necesario
   },
   doorName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2d3748',
     marginBottom: 4,
+    flexWrap: 'wrap', // Permitir que el texto se envuelva
   },
   doorLocation: {
     fontSize: 14,
@@ -287,9 +288,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailText: {
-    marginLeft: 8,
     fontSize: 14,
     color: '#4a5568',
+    marginBottom: 2,
+    flexWrap: 'wrap', // Permitir que el texto se envuelva
   },
   doorActions: {
     flexDirection: 'row',
@@ -319,11 +321,12 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   emptyText: {
-    marginTop: 16,
     fontSize: 16,
     color: '#718096',
     textAlign: 'center',
-    marginBottom: 24,
+    marginTop: 8,
+    paddingHorizontal: 20,
+    flexWrap: 'wrap',
   },
   addButton: {
     backgroundColor: '#4299e1',

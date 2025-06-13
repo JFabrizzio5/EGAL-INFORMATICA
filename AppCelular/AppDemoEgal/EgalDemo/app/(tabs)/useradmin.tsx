@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, Text, StyleSheet, Button, SafeAreaView, 
   ActivityIndicator, ScrollView, TouchableOpacity, Alert,
-  RefreshControl, Image
+  RefreshControl, Image, FlatList
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { WS_URL, API_URL } from '../../constants/api';
@@ -22,6 +22,9 @@ export default function UserAdminScreen() {
   const reconnectTimerRef = useRef(null);
   const heartbeatTimerRef = useRef(null);
   const lastPingTimeRef = useRef(0);
+  // Añade estas referencias de temporizador adicionales
+  const statusChangeTimerRef = useRef(null);
+  const wasConnectedRef = useRef(false);
 
   // Si el usuario no está autenticado, mostrar indicador de carga
   if (!user) {
@@ -36,7 +39,7 @@ export default function UserAdminScreen() {
     connectWebSocket();
     
     // Iniciar temporizador de heartbeat para verificar la conexión
-    heartbeatTimerRef.current = setInterval(checkConnection, 10000);
+    heartbeatTimerRef.current = setInterval(checkConnection, 30000);
     
     return () => {
       cleanupConnection();
@@ -55,6 +58,11 @@ export default function UserAdminScreen() {
       heartbeatTimerRef.current = null;
     }
     
+    if (statusChangeTimerRef.current) {
+      clearTimeout(statusChangeTimerRef.current);
+      statusChangeTimerRef.current = null;
+    }
+    
     // Cerrar websocket si existe
     if (wsRef.current) {
       try {
@@ -71,11 +79,35 @@ export default function UserAdminScreen() {
     setLogs(prev => [`[${timestamp}] ${message}`, ...prev.slice(0, 49)]);
   };
 
+  // Reemplaza la función connectWebSocket actual con esta versión mejorada
   const connectWebSocket = () => {
     // Validar que existe user antes de intentar conectar
     if (!user) {
       console.error('No hay usuario autenticado para conectar al WebSocket');
       return;
+    }
+    
+    // Limpiar cualquier timer de cambio de estado pendiente
+    if (statusChangeTimerRef.current) {
+      clearTimeout(statusChangeTimerRef.current);
+      statusChangeTimerRef.current = null;
+    }
+    
+    // Si estábamos conectados previamente, retrasar el cambio a "Conectando..."
+    if (status === "Conectado") {
+      wasConnectedRef.current = true;
+      // No cambiar el estado inmediatamente, programar un cambio después de 5 segundos
+      statusChangeTimerRef.current = setTimeout(() => {
+        // Solo cambiar a "Conectando..." si todavía no estamos conectados después de 5 segundos
+        if (wsRef.current?.readyState !== WebSocket.OPEN) {
+          setStatus("Conectando...");
+          addLog("Reconexión en progreso...");
+        }
+        statusChangeTimerRef.current = null;
+      }, 5000);
+    } else if (!wasConnectedRef.current) {
+      // Si nunca hemos estado conectados, mostrar "Conectando..." inmediatamente
+      setStatus("Conectando...");
     }
     
     // Limpiar cualquier conexión existente
@@ -87,7 +119,6 @@ export default function UserAdminScreen() {
       }
     }
 
-    setStatus("Conectando...");
     addLog("Intentando conectar al servidor...");
     
     try {
@@ -95,7 +126,14 @@ export default function UserAdminScreen() {
       wsRef.current = socket;
 
       socket.onopen = () => {
+        // Limpiar cualquier timer pendiente de cambio de estado
+        if (statusChangeTimerRef.current) {
+          clearTimeout(statusChangeTimerRef.current);
+          statusChangeTimerRef.current = null;
+        }
+        
         setStatus("Conectado");
+        wasConnectedRef.current = true;
         addLog("Conexión establecida con el servidor de puertas");
         lastPingTimeRef.current = Date.now();
         
@@ -124,14 +162,27 @@ export default function UserAdminScreen() {
       };
 
       socket.onclose = (event) => {
-        setStatus("Desconectado");
-        addLog(`Conexión cerrada: ${event.reason || 'Sin razón especificada'}`);
+        // No cambiar el estado inmediatamente, programar un cambio después de 5 segundos
+        if (status === "Conectado" && !statusChangeTimerRef.current) {
+          statusChangeTimerRef.current = setTimeout(() => {
+            // Solo cambiar a "Desconectado" si todavía no estamos conectados después de 5 segundos
+            if (wsRef.current?.readyState !== WebSocket.OPEN) {
+              setStatus("Desconectado");
+              addLog(`Conexión cerrada: ${event.reason || 'Sin razón especificada'}`);
+            }
+            statusChangeTimerRef.current = null;
+          }, 5000);
+        } else if (status !== "Conectado") {
+          // Si ya no estábamos conectados, actualizar estado inmediatamente
+          setStatus("Desconectado");
+          addLog(`Conexión cerrada: ${event.reason || 'Sin razón especificada'}`);
+        }
         
         // Programar reconexión automática
         if (!reconnectTimerRef.current) {
           reconnectTimerRef.current = setTimeout(() => {
             reconnectTimerRef.current = null;
-            if (status !== "Conectado") {
+            if (wsRef.current?.readyState !== WebSocket.OPEN) {
               addLog("Intentando reconexión automática...");
               connectWebSocket();
             }
@@ -140,54 +191,88 @@ export default function UserAdminScreen() {
       };
 
       socket.onerror = (error) => {
-        setStatus("Error");
         addLog("Error en la conexión WebSocket");
+        // No cambiar el estado aquí, dejar que onclose se encargue
       };
     } catch (error) {
-      setStatus("Error");
       addLog(`Error creando WebSocket: ${error.message}`);
+      setStatus("Error");
     }
   };
   
-  // Función para enviar ping al servidor
+  // Modificar el envío de ping para asegurar que se envíe cada 23 segundos como mínimo
   const sendPing = () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'ping' }));
+      // Solo enviar ping si han pasado al menos 23 segundos desde el último
+      const timeSinceLastPing = Date.now() - lastPingTimeRef.current;
+      if (timeSinceLastPing >= 23000) {
+        wsRef.current.send(JSON.stringify({ type: 'ping' }));
+        lastPingTimeRef.current = Date.now();
+        addLog("Enviando ping para mantener conexión");
+      }
     }
   };
   
-  // Verificar si la conexión está activa basada en el último ping
+  // Modificar checkConnection para respetar el intervalo de 23 segundos
   const checkConnection = () => {
-    // Si no hay una conexión activa, intentar reconectar
+    // Si no hay una conexión activa, intentar reconectar solo si no hay una reconexión en progreso
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      if (status !== "Desconectado") {
-        setStatus("Desconectado");
-        addLog("Detectada desconexión. WebSocket no está abierto.");
+      if (status === "Conectado" && !statusChangeTimerRef.current) {                           
+        // Si estábamos conectados, programar un cambio de estado después de 5 segundos
+        statusChangeTimerRef.current = setTimeout(() => {
+          if (wsRef.current?.readyState !== WebSocket.OPEN) {
+            setStatus("Desconectado");
+            addLog("Detectada desconexión. WebSocket no está abierto.");
+          }
+          statusChangeTimerRef.current = null;
+        }, 5000);
       }
       
-      // Intentar reconectar
+      // Intentar reconectar solo si no hay una reconexión en progreso
       if (!reconnectTimerRef.current) {
-        connectWebSocket();
+        reconnectTimerRef.current = setTimeout(() => {
+          reconnectTimerRef.current = null;
+          connectWebSocket();
+        }, 5000);
       }
       return;
     }
     
     // Verificar cuánto tiempo ha pasado desde el último ping
     const timeSinceLastPing = Date.now() - lastPingTimeRef.current;
-    if (timeSinceLastPing > 30000) {  // 30 segundos sin respuesta
-      addLog("Conexión inactiva. Reiniciando...");
-      setStatus("Desconectado");
+    
+    // Solo enviar ping si han pasado al menos 23 segundos desde el último
+    if (timeSinceLastPing >= 5000) {
+      sendPing();
+    }
+    
+    // Verificar si la conexión está inactiva (sin respuesta durante 45+ segundos)
+    if (timeSinceLastPing > 15000) {
+      addLog("Conexión inactiva por largo tiempo. Reiniciando...");
       
-      // Cerrar y volver a abrir
+      // No cambiar el estado inmediatamente
+      if (!statusChangeTimerRef.current) {
+        statusChangeTimerRef.current = setTimeout(() => {
+          if (wsRef.current?.readyState !== WebSocket.OPEN) {
+            setStatus("Desconectado");
+          }
+          statusChangeTimerRef.current = null;
+        }, 5000);
+      }
+      
+      // Cerrar y programar reconexión
       try {
         wsRef.current.close();
       } catch (e) {}
       
       wsRef.current = null;
-      connectWebSocket();
-    } else {
-      // Enviar ping periódico
-      sendPing();
+      
+      if (!reconnectTimerRef.current) {
+        reconnectTimerRef.current = setTimeout(() => {
+          reconnectTimerRef.current = null;
+          connectWebSocket();
+        }, 5000);
+      }
     }
   };
 
@@ -354,15 +439,13 @@ export default function UserAdminScreen() {
               </View>
             </View>
             
-            <View style={styles.logsList}>
-              {logs.length > 0 ? (
-                logs.map((log, index) => (
-                  <Text key={index} style={styles.logItem}>{log}</Text>
-                ))
-              ) : (
-                <Text style={styles.noLogs}>No hay actividad registrada</Text>
-              )}
-            </View>
+            <FlatList
+              data={logs}
+              renderItem={({ item }) => <Text style={styles.logText}>{item}</Text>}
+              keyExtractor={(item, index) => `log-${index}`}
+              style={styles.logContainer}
+              contentContainerStyle={styles.logScrollView}
+            />
           </View>
         ) : (
           <TouchableOpacity 
@@ -583,6 +666,22 @@ const styles = StyleSheet.create({
   clearLogsText: {
     color: '#4299e1',
     fontWeight: '500',
+  },
+  logContainer: {
+    flex: 1,
+    backgroundColor: '#1a202c',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+  },
+  logText: {
+    color: '#a0aec0',
+    fontFamily:  'monospace',
+    fontSize: 12,
+    flexWrap: 'wrap', // Permitir que el texto se envuelva
+  },
+  logScrollView: {
+    flexGrow: 1,
   },
   logsList: {
     backgroundColor: '#f8f9fa',
