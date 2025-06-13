@@ -13,6 +13,12 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{
       tabBarActiveTintColor: '#4299e1',
+      tabBarInactiveTintColor: '#718096',
+      tabBarStyle: {
+        backgroundColor: 'white',
+        borderTopWidth: 1,
+        borderTopColor: '#e2e8f0',
+      },
     }}>
       {user.is_admin ? (
         <Tabs.Screen
@@ -68,7 +74,11 @@ export default function TabLayout() {
         />
       )}
       
-      {/* La sección de door-management ha sido eliminada para ocultar la gestión de puertas */}
+      {/* Ocultamos completamente estas pantallas que no existen como archivos válidos
+      <Tabs.Screen name="nfc-scanner" />
+      <Tabs.Screen name="profile" />
+      <Tabs.Screen name="door-management" />
+      */}
     </Tabs>
   );
 }
