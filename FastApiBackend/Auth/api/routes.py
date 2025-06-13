@@ -1,6 +1,6 @@
 # Ruta: Auth/api/routes.py
 
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header, Body
 from typing import Optional
 from Auth.models.auth_models import LoginRequest, TokenResponse, UserInfo
 from Auth.models.user_models import UserCreateRequest
@@ -8,6 +8,7 @@ from Auth.services.auth_service import authenticate_user, create_access_token, g
 from Auth.services.main_user_service import register_user
 from Auth.validations import validate_user_data, validate_email_format
 from config import logger
+from config import get_database
 
 router = APIRouter()
 
@@ -205,3 +206,207 @@ async def generate_access_token(user_id: str, authorization: Optional[str] = Hea
         "validation_url": validation_url,
         "expires_in_days": 7
     }
+
+@router.post("/usuarios/{user_id}/permisos/puerta")
+async def add_door_permission(
+    user_id: str, 
+    puerta_id: str = Body(..., embed=True),
+    authorization: Optional[str] = Header(None)
+):
+    """Añade permiso de puerta a un usuario"""
+    # Verificar autenticación
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Autenticación requerida"
+        )
+    
+    # Decodificar token
+    token = authorization.split(" ")[1]
+    payload = decode_token(token)
+    
+    if not payload:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido o expirado"
+        )
+    
+    # Verificar si es admin
+    requester_id = payload.get("sub")
+    requester = await get_user_by_id(requester_id)
+    
+    if not requester or not requester.get("is_admin", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Solo administradores pueden modificar permisos"
+        )
+    
+    # Obtener usuario objetivo
+    target_user = await get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuario no encontrado"
+        )
+    
+    # No modificar permisos de administradores
+    if target_user.get("is_admin", False):
+        raise HTTPException(
+            status_code=400,
+            detail="No se pueden modificar permisos de administradores"
+        )
+    
+    # Añadir permiso
+    db = await get_database("egal")
+    
+    # Obtener permisos actuales
+    current_permissions = target_user.get("puertas_acceso", [])
+    
+    # Verificar si ya tiene el permiso
+    if puerta_id in current_permissions:
+        return {"message": f"El usuario ya tiene acceso a la puerta {puerta_id}"}
+    
+    # Añadir permiso
+    current_permissions.append(puerta_id)
+    
+    # Actualizar en la base de datos
+    await db.usuarios.update_one(
+        {"_id": user_id},
+        {"$set": {"puertas_acceso": current_permissions}}
+    )
+    
+    # Invalidar caché de permisos si existe
+    from Puertas.repositories.puertacache import PuertaCacheRepository
+    await PuertaCacheRepository.invalidate_user_cache(user_id)
+    
+    return {
+        "message": f"Permiso para puerta {puerta_id} añadido correctamente",
+        "user_id": user_id,
+        "puertas_acceso": current_permissions
+    }
+
+@router.delete("/usuarios/{user_id}/permisos/puerta/{puerta_id}")
+async def remove_door_permission(
+    user_id: str, 
+    puerta_id: str,
+    authorization: Optional[str] = Header(None)
+):
+    """Elimina permiso de puerta a un usuario"""
+    # Verificar autenticación
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Autenticación requerida"
+        )
+    
+    # Decodificar token
+    token = authorization.split(" ")[1]
+    payload = decode_token(token)
+    
+    if not payload:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido o expirado"
+        )
+    
+    # Verificar si es admin
+    requester_id = payload.get("sub")
+    requester = await get_user_by_id(requester_id)
+    
+    if not requester or not requester.get("is_admin", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Solo administradores pueden modificar permisos"
+        )
+    
+    # Obtener usuario objetivo
+    target_user = await get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuario no encontrado"
+        )
+    
+    # No modificar permisos de administradores
+    if target_user.get("is_admin", False):
+        raise HTTPException(
+            status_code=400,
+            detail="No se pueden modificar permisos de administradores"
+        )
+    
+    # Eliminar permiso
+    db = await get_database("egal")
+    
+    # Obtener permisos actuales
+    current_permissions = target_user.get("puertas_acceso", [])
+    
+    # Verificar si tiene el permiso
+    if puerta_id not in current_permissions:
+        return {"message": f"El usuario no tiene acceso a la puerta {puerta_id}"}
+    
+    # Eliminar permiso
+    current_permissions.remove(puerta_id)
+    
+    # Actualizar en la base de datos
+    await db.usuarios.update_one(
+        {"_id": user_id},
+        {"$set": {"puertas_acceso": current_permissions}}
+    )
+    
+    # Invalidar caché de permisos si existe
+    from Puertas.repositories.puertacache import PuertaCacheRepository
+    await PuertaCacheRepository.invalidate_user_cache(user_id)
+    
+    return {
+        "message": f"Permiso para puerta {puerta_id} eliminado correctamente",
+        "user_id": user_id,
+        "puertas_acceso": current_permissions
+    }
+
+@router.get("/usuarios")
+async def list_users(authorization: Optional[str] = Header(None)):
+    """Lista todos los usuarios (solo admin)"""
+    # Verificar autenticación
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Autenticación requerida"
+        )
+    
+    # Decodificar token
+    token = authorization.split(" ")[1]
+    payload = decode_token(token)
+    
+    if not payload:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido o expirado"
+        )
+    
+    # Verificar si es admin
+    requester_id = payload.get("sub")
+    requester = await get_user_by_id(requester_id)
+    
+    if not requester or not requester.get("is_admin", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Solo administradores pueden listar usuarios"
+        )
+    
+    # Obtener usuarios
+    db = await get_database("egal")
+    users_cursor = db.usuarios.find({}, {
+        "password": 0  # Excluir contraseñas
+    })
+    
+    users = []
+    async for user in users_cursor:
+        users.append({
+            "id": user["_id"],
+            "username": user["username"],
+            "email": user["email"],
+            "is_admin": user.get("is_admin", False),
+            "puertas_acceso": user.get("puertas_acceso", [])
+        })
+    
+    return users

@@ -56,6 +56,18 @@ export default function TabLayout() {
           ),
         }}
       />
+      
+      {user.is_admin && (
+        <Tabs.Screen
+          name="users-management"
+          options={{
+            title: 'Usuarios',
+            tabBarIcon: ({ color }) => (
+              <Ionicons name="people" size={24} color={color} />
+            ),
+          }}
+        />
+      )}
     </Tabs>
   );
 }

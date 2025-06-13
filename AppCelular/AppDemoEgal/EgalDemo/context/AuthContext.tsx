@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_URL } from '../constants/api';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 // Definir tipo para el usuario
 type User = {
@@ -18,6 +18,7 @@ type AuthContextType = {
   login: (username: string, password: string) => Promise<User | null>;
   logout: () => void;
   isLoading: boolean;
+  storeTokenInWebView: (token: string) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,6 +76,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loadUserFromStorage();
   }, []);
 
+  // Añadir estos métodos al contexto de autenticación
+
+  // Añadir esta función dentro del provider para compartir con navegador web
+  const storeTokenInWebView = async (token: string) => {
+    try {
+      // Solo funciona en web
+      if (Platform.OS === 'web') {
+        localStorage.setItem('egal_auth_token', token);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error guardando token en WebView:', error);
+      return false;
+    }
+  };
+
   // Función de inicio de sesión
   const login = async (username: string, password: string): Promise<User | null> => {
     try {
@@ -94,6 +112,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Guardar en estado y en AsyncStorage
       setUser(userData);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+      
+      // Intentar guardar en WebView también si estamos en web
+      await storeTokenInWebView(userData.token);
+      
       return userData;
     } catch (error) {
       console.error('Error de inicio de sesión:', error);
@@ -107,8 +129,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await AsyncStorage.removeItem('user');
   };
 
+  // Luego exponer en el context
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      isLoading, 
+      storeTokenInWebView // <-- Nueva función exportada
+    }}>
       {children}
     </AuthContext.Provider>
   );

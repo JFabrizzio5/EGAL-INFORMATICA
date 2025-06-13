@@ -6,10 +6,19 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { AuthProvider } from '../context/AuthContext';
 import * as SplashScreen from 'expo-splash-screen';
+import { useDeepLinks } from '../hooks/useDeepLinks';
 
 // Prevenir que la splash screen se oculte automáticamente
 SplashScreen.preventAutoHideAsync();
 
+
+// Componente interno que usa el hook (dentro de AuthProvider)
+function RootLayoutContent() {
+  useDeepLinks(); // Ahora este hook se usa DENTRO del contexto AuthProvider
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+
+// Componente principal que proporciona el contexto
 export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
   
@@ -49,11 +58,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={DefaultTheme}>
       <AuthProvider>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
+        <RootLayoutContent />
         <StatusBar style="auto" />
       </AuthProvider>
     </ThemeProvider>
