@@ -7,6 +7,7 @@ import json
 from typing import Dict, Set
 from config import get_redis, get_database, get_all_databases, logger
 from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
 
 # Almacén global para conexiones WebSocket
 websocket_connections: Dict[str, WebSocket] = {}
@@ -278,11 +279,7 @@ try:
     app.include_router(puertas_router, prefix='/puertas/v1', tags=['puertas'])
 except ImportError:
     logger.warning("Puertas router no disponible")
-# En main.py
 
-from fastapi.staticfiles import StaticFiles
-
-# Después de crear la app
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
