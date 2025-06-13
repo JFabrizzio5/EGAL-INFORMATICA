@@ -4,119 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Acceso EGAL</title>
+    <title>Control de Acceso a Puertas</title>
     <style>
-        :root {
-            --primary: #4299e1;
-            --primary-dark: #3182ce;
-            --danger: #e53e3e;
-            --success: #48bb78;
-            --text: #2d3748;
-            --text-light: #4a5568;
-            --bg: #f7fafc;
-            --card-bg: #fff;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
         }
 
         .container {
-            max-width: 480px;
+            max-width: 500px;
             margin: 0 auto;
+            background: white;
+            border-radius: 10px;
             padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
         }
 
-        .header {
+        h1 {
+            color: #2c3e50;
             text-align: center;
-            padding: 20px 0;
-            background-color: #4a5568;
-            color: white;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        h1,
-        h2,
-        h3 {
-            margin-top: 0;
-            color: var(--text);
-        }
-
-        .status-badge {
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            text-align: center;
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        .status-success {
-            background-color: rgba(72, 187, 120, 0.2);
-            color: var(--success);
-        }
-
-        .status-error {
-            background-color: rgba(229, 62, 62, 0.2);
-            color: var(--danger);
-        }
-
-        .status-warning {
-            background-color: rgba(237, 137, 54, 0.2);
-            color: #ed8936;
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            text-align: center;
-            margin-top: 10px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-        }
-
-        .btn-success {
-            background-color: var(--success);
         }
 
         .form-group {
@@ -126,325 +35,277 @@
         label {
             display: block;
             margin-bottom: 5px;
-            font-weight: 500;
+            font-weight: bold;
         }
 
-        input {
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
             padding: 10px;
-            border: 1px solid #cbd5e0;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 16px;
             box-sizing: border-box;
         }
 
-        .door-info {
-            display: flex;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #e2e8f0;
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
         }
 
-        .door-icon {
-            background-color: rgba(66, 153, 225, 0.2);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
+        button:hover {
+            background: #2980b9;
         }
 
-        .door-details {
-            flex: 1;
+        .btn-danger {
+            background: #e74c3c;
         }
 
-        .door-name {
-            font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 5px;
+        .btn-danger:hover {
+            background: #c0392b;
         }
 
-        .user-info {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
-            font-size: 14px;
-            color: var(--text-light);
+        .btn-success {
+            background: #2ecc71;
         }
 
-        .icon {
-            width: 24px;
-            height: 24px;
-            fill: var(--primary);
+        .btn-success:hover {
+            background: #27ae60;
         }
 
-        .text-center {
+        .error {
+            color: #e74c3c;
             text-align: center;
+            margin: 10px 0;
         }
 
-        .text-danger {
-            color: var(--danger);
-        }
-
-        .text-success {
-            color: var(--success);
-        }
-
-        .footer {
+        .success {
+            color: #2ecc71;
             text-align: center;
-            padding: 20px;
-            margin-top: auto;
-            font-size: 14px;
-            color: var(--text-light);
+            margin: 10px 0;
         }
 
         .hidden {
             display: none;
         }
 
-        .flex {
-            display: flex;
+        .door-info {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
         }
 
-        .justify-between {
-            justify-content: space-between;
-        }
-
-        .mt-20 {
+        .user-info {
             margin-top: 20px;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
+            padding: 10px;
+            background: #f0f8ff;
+            border-radius: 5px;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <div class="logo">EGAL Security</div>
-    </div>
-
     <div class="container">
-        <!-- Estado inicial - Cargando -->
-        <div id="loading-state" class="card">
-            <h2 class="text-center">Cargando información...</h2>
-            <div class="text-center" style="padding: 20px;">
-                <svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" stroke="#4299e1">
-                    <g fill="none" fill-rule="evenodd">
-                        <g transform="translate(1 1)" stroke-width="2">
-                            <circle stroke-opacity=".5" cx="18" cy="18" r="18" />
-                            <path d="M36 18c0-9.94-8.06-18-18-18">
-                                <animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18"
-                                    dur="1s" repeatCount="indefinite" />
-                            </path>
-                        </g>
-                    </g>
-                </svg>
-            </div>
+        <h1>Control de Acceso</h1>
+
+        <!-- Información de la puerta -->
+        <div class="door-info">
+            <h2 id="doorTitle">Puerta</h2>
+            <p id="doorDescription">Utilice sus credenciales para acceder</p>
         </div>
 
-        <!-- Estado - Login requerido -->
-        <div id="login-state" class="card hidden">
-            <h2>Iniciar Sesión</h2>
-            <p>Para abrir esta puerta, primero debes autenticarte:</p>
-
+        <!-- Formulario de login (visible cuando no hay token) -->
+        <div id="loginForm">
             <div class="form-group">
                 <label for="username">Usuario:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" placeholder="Nombre de usuario">
             </div>
-
             <div class="form-group">
                 <label for="password">Contraseña:</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" placeholder="Contraseña">
             </div>
-
-            <button id="login-btn" class="btn">Iniciar Sesión</button>
-
-            <div id="login-error" class="status-badge status-error hidden mt-20">
-                Usuario o contraseña incorrectos
-            </div>
+            <button id="loginButton">Iniciar Sesión</button>
+            <p id="loginError" class="error hidden">Error de autenticación</p>
         </div>
 
-        <!-- Estado - Permiso denegado -->
-        <div id="denied-state" class="card hidden">
-            <div class="text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
-                    stroke="#e53e3e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-            </div>
-            <h2 class="text-center text-danger">Acceso Denegado</h2>
-            <p class="text-center">No tienes permiso para acceder a esta puerta.</p>
-
-            <div class="door-info">
-                <div class="door-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="#4299e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
-                        <path d="M2 20h20"></path>
-                        <path d="M14 12v.01"></path>
-                    </svg>
-                </div>
-                <div class="door-details">
-                    <div class="door-name" id="denied-door-name">Puerta</div>
-                    <div id="denied-door-location">Ubicación</div>
-                </div>
-            </div>
-
-            <div class="text-center mt-20">
-                <a href="/" class="btn">Volver al Inicio</a>
-            </div>
-        </div>
-
-        <!-- Estado - Éxito -->
-        <div id="success-state" class="card hidden">
-            <div class="text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
-                    stroke="#48bb78" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-            </div>
-            <h2 class="text-center text-success">Puerta Abierta</h2>
-            <p class="text-center">La puerta se ha abierto correctamente.</p>
-
-            <div class="door-info">
-                <div class="door-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="#4299e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
-                        <path d="M2 20h20"></path>
-                        <path d="M14 12v.01"></path>
-                    </svg>
-                </div>
-                <div class="door-details">
-                    <div class="door-name" id="success-door-name">Puerta</div>
-                    <div id="success-door-location">Ubicación</div>
-                </div>
-            </div>
-
+        <!-- Panel de control (visible cuando hay token válido) -->
+        <div id="controlPanel" class="hidden">
             <div class="user-info">
-                <div><strong>Usuario:</strong> <span id="success-username">-</span></div>
-                <div><strong>Fecha:</strong> <span id="success-date">-</span></div>
+                <p>Conectado como: <strong id="userInfo">Usuario</strong></p>
             </div>
-
-            <div class="text-center mt-20">
-                <a href="/" class="btn">Volver al Inicio</a>
-            </div>
-        </div>
-
-        <!-- Estado - Error -->
-        <div id="error-state" class="card hidden">
-            <div class="text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
-                    stroke="#e53e3e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-            </div>
-            <h2 class="text-center text-danger">Error</h2>
-            <p class="text-center" id="error-message">Ha ocurrido un error al procesar la solicitud.</p>
-
-            <div class="text-center mt-20">
-                <button id="retry-btn" class="btn">Reintentar</button>
-            </div>
+            <button id="openDoorButton" class="btn-success">Abrir Puerta</button>
+            <p id="doorMessage" class="success hidden">Puerta abierta correctamente</p>
+            <button id="logoutButton" class="btn-danger">Cerrar Sesión</button>
         </div>
     </div>
 
-    <div class="footer">
-        <p>© 2025 EGAL Informática - Sistema de Control de Acceso</p>
-        <p>
-            <a href="/politica-privacidad.html">Política de Privacidad</a> |
-            <a href="/terminos-servicio.html">Términos de Servicio</a>
-        </p>
-    </div>
+    <!-- Mantener la mayoría del archivo igual y modificar la parte de JavaScript -->
 
     <script>
         // Variables globales
-        let currentDoorId = null;
-        let currentToken = null;
-        let doorInfo = {
-            'puerta1': { name: 'Puerta 1', location: 'Entrada Principal' },
-            'puerta2': { name: 'Puerta 2', location: 'Área de Oficinas' },
-            'puerta3': { name: 'Puerta 3', location: 'Sala de Servidores' }
-        };
+        let token = null;
+        let currentUser = null;
+        let puertaId = null;
+        let hasPermission = false;
+        let wsConnection = null;
+        let wsReconnectTimer = null;
+        let pingInterval = null;
 
-        // Función para obtener parámetros de la URL
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                doorId: params.get('puerta_id') || params.get('id'),
-                token: params.get('token')
-            };
+        // Elementos DOM
+        const loginForm = document.getElementById('loginForm');
+        const controlPanel = document.getElementById('controlPanel');
+        const doorTitle = document.getElementById('doorTitle');
+        const doorDescription = document.getElementById('doorDescription');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('loginButton');
+        const loginError = document.getElementById('loginError');
+        const userInfo = document.getElementById('userInfo');
+        const openDoorButton = document.getElementById('openDoorButton');
+        const doorMessage = document.getElementById('doorMessage');
+        const logoutButton = document.getElementById('logoutButton');
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', init);
+
+        function init() {
+            // Obtener ID de puerta de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            puertaId = urlParams.get('puerta_id');
+            const urlToken = urlParams.get('token');
+
+            if (puertaId) {
+                doorTitle.textContent = `Puerta: ${puertaId}`;
+            }
+
+            // Verificar si hay token en localStorage o en URL
+            token = localStorage.getItem('accessToken') || urlToken;
+
+            if (token) {
+                // Guardar token si vino por URL
+                if (urlToken) {
+                    localStorage.setItem('accessToken', token);
+                }
+
+                // Verificar token
+                validateToken(token);
+            } else {
+                showLoginForm();
+            }
+
+            // Event listeners
+            loginButton.addEventListener('click', handleLogin);
+            openDoorButton.addEventListener('click', handleOpenDoor);
+            logoutButton.addEventListener('click', handleLogout);
         }
 
-        // Función para mostrar un estado y ocultar los demás
-        function showState(stateId) {
-            const states = ['loading-state', 'login-state', 'denied-state', 'success-state', 'error-state'];
-            states.forEach(state => {
-                document.getElementById(state).classList.add('hidden');
-            });
-            document.getElementById(stateId).classList.remove('hidden');
+        function showLoginForm() {
+            loginForm.classList.remove('hidden');
+            controlPanel.classList.add('hidden');
+            loginError.classList.add('hidden');
+            doorDescription.textContent = 'Utilice sus credenciales para acceder';
         }
 
-        // Función para obtener token guardado
-        function getSavedToken() {
-            return localStorage.getItem('egal_token');
+        function showControlPanel() {
+            loginForm.classList.add('hidden');
+            controlPanel.classList.remove('hidden');
+            doorMessage.classList.add('hidden');
+
+            // Mostrar información del usuario
+            if (currentUser) {
+                userInfo.textContent = currentUser.username || currentUser.email || 'Usuario';
+
+                // Iniciar o mantener la conexión WebSocket
+                setupWebSocket(currentUser.id);
+
+                // Actualizar mensaje según si tiene permiso o no
+                if (hasPermission) {
+                    doorDescription.textContent = `¿Deseas abrir la puerta ${puertaId}?`;
+                    openDoorButton.classList.remove('hidden');
+                    openDoorButton.textContent = "Abrir Puerta";
+                    openDoorButton.className = "btn-success";
+                } else {
+                    doorDescription.textContent = `No tienes acceso a la puerta ${puertaId}`;
+                    openDoorButton.classList.add('hidden');
+                    doorMessage.textContent = "No tienes permisos para esta puerta. Cierra sesión y prueba con otro usuario.";
+                    doorMessage.className = "error";
+                    doorMessage.classList.remove('hidden');
+                }
+            }
         }
 
-        // Función para guardar token
-        function saveToken(token, user) {
-            localStorage.setItem('egal_token', token);
-            localStorage.setItem('egal_user', JSON.stringify(user));
-        }
-
-        // Función para limpiar token
-        function clearToken() {
-            localStorage.removeItem('egal_token');
-            localStorage.removeItem('egal_user');
-        }
-
-        // Función para validar token con el servidor
-        async function validateToken(token, doorId) {
+        // Función corregida para validar token
+        async function validateToken(token) {
             try {
-                const response = await fetch(`${window.location.origin}/puertas/v1/abrir/${doorId}?validate=true`, {
-                    method: 'GET',
+                // Primero obtener información del usuario actual
+                const userResponse = await fetch('/auth/v1/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    return { valid: true, user: data.user };
-                } else if (response.status === 401) {
-                    // Token inválido o expirado
-                    clearToken();
-                    return { valid: false, error: 'Token inválido o expirado' };
-                } else if (response.status === 403) {
-                    // Sin permiso para esta puerta
-                    return { valid: false, error: 'Sin permiso para esta puerta', nopermission: true };
-                } else {
-                    return { valid: false, error: 'Error de servidor' };
+                if (!userResponse.ok) {
+                    // Token inválido para usuario
+                    localStorage.removeItem('accessToken');
+                    token = null;
+                    showLoginForm();
+                    return false;
                 }
+
+                // Guardar datos del usuario
+                currentUser = await userResponse.json();
+
+                // Ahora verificar permisos para la puerta con el ID correcto
+                const permResponse = await fetch(`/puertas/v1/permisos/${currentUser.id}/${puertaId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (permResponse.ok) {
+                    const permData = await permResponse.json();
+                    hasPermission = permData.has_permission;
+                } else {
+                    console.error('Error verificando permisos:', await permResponse.text());
+                    // Si falla la verificación de permisos pero el token es válido
+                    // Asumimos que no tiene permiso pero mantenemos la sesión
+                    hasPermission = false;
+                }
+
+                // Mostrar panel de control con los permisos actualizados
+                showControlPanel();
+                return true;
             } catch (error) {
                 console.error('Error validando token:', error);
-                return { valid: false, error: 'Error de conexión' };
+                showLoginForm();
+                return false;
             }
         }
 
-        // Función para iniciar sesión
-        async function login(username, password) {
+        async function handleLogin() {
+            loginError.classList.add('hidden');
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!username || !password) {
+                loginError.textContent = 'Ingrese usuario y contraseña';
+                loginError.classList.remove('hidden');
+                return;
+            }
+
             try {
-                const response = await fetch(`${window.location.origin}/auth/v1/login`, {
+                // Enviar credenciales al endpoint de login
+                const response = await fetch('/auth/v1/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -452,169 +313,170 @@
                     body: JSON.stringify({ username, password })
                 });
 
+                const data = await response.json();
+
                 if (response.ok) {
-                    const data = await response.json();
-                    return { success: true, token: data.access_token, user: data.user };
+                    // Login exitoso
+                    token = data.access_token;
+                    currentUser = {
+                        id: data.user_id,
+                        username: data.username,
+                        is_admin: data.is_admin,
+                        puertas_acceso: data.puertas_acceso || []
+                    };
+
+                    // Guardar token
+                    localStorage.setItem('accessToken', token);
+
+                    // Verificar si el usuario tiene acceso a esta puerta
+                    hasPermission = currentUser.is_admin || (currentUser.puertas_acceso && currentUser.puertas_acceso.includes(puertaId));
+
+                    // Mostrar panel de control
+                    showControlPanel();
                 } else {
-                    return { success: false, error: 'Credenciales inválidas' };
+                    // Error de login
+                    loginError.textContent = data.detail || 'Error de autenticación';
+                    loginError.classList.remove('hidden');
                 }
             } catch (error) {
-                console.error('Error en login:', error);
-                return { success: false, error: 'Error de conexión' };
+                console.error('Error de login:', error);
+                loginError.textContent = 'Error de conexión';
+                loginError.classList.remove('hidden');
             }
         }
 
-        // Función para abrir puerta
-        async function openDoor(token, doorId) {
-            try {
-                const response = await fetch(`${window.location.origin}/puertas/v1/abrir/${doorId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return { success: true, message: data.message };
-                } else if (response.status === 403) {
-                    return { success: false, error: 'Sin permiso para esta puerta', nopermission: true };
-                } else {
-                    return { success: false, error: 'Error abriendo puerta' };
-                }
-            } catch (error) {
-                console.error('Error abriendo puerta:', error);
-                return { success: false, error: 'Error de conexión' };
-            }
-        }
-
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Obtener parámetros de URL
-            const params = getUrlParams();
-            currentDoorId = params.doorId;
-
-            // Verificar si tenemos puerta
-            if (!currentDoorId) {
-                showState('error-state');
-                document.getElementById('error-message').textContent = 'No se ha especificado una puerta';
+        async function handleOpenDoor() {
+            if (!token || !puertaId || !hasPermission) {
                 return;
             }
 
-            // Información de la puerta
-            const door = doorInfo[currentDoorId] || { name: `Puerta ${currentDoorId}`, location: 'Ubicación desconocida' };
+            try {
+                // Enviar comando para abrir puerta
+                const response = await fetch(`/puertas/v1/abrir`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        puerta_id: puertaId,
+                        accion: "abrir",
+                        user_id: currentUser.id
+                    })
+                });
 
-            // Actualizar información de puerta en todos los estados
-            document.getElementById('denied-door-name').textContent = door.name;
-            document.getElementById('denied-door-location').textContent = door.location;
-            document.getElementById('success-door-name').textContent = door.name;
-            document.getElementById('success-door-location').textContent = door.location;
+                // Mostrar mensaje de resultado
+                doorMessage.classList.remove('hidden');
 
-            // Verificar si hay token en la URL o guardado
-            const urlToken = params.token;
-            const savedToken = getSavedToken();
-
-            // Priorizar token de URL
-            currentToken = urlToken || savedToken;
-
-            if (currentToken) {
-                // Validar token
-                const validation = await validateToken(currentToken, currentDoorId);
-
-                if (validation.valid) {
-                    // Si el token es de URL, guardarlo
-                    if (urlToken) {
-                        saveToken(urlToken, validation.user);
-                    }
-
-                    // Token válido, intentar abrir puerta
-                    const result = await openDoor(currentToken, currentDoorId);
-
-                    if (result.success) {
-                        // Puerta abierta con éxito
-                        showState('success-state');
-
-                        // Mostrar información del usuario
-                        const user = JSON.parse(localStorage.getItem('egal_user')) || {};
-                        document.getElementById('success-username').textContent = user.username || '-';
-                        document.getElementById('success-date').textContent = new Date().toLocaleString();
-
-                        // Opcional: redirigir a la app después de unos segundos
-                        setTimeout(() => {
-                            if (confirm('¿Abrir la aplicación EGAL?')) {
-                                window.location.href = 'egaldemo://home';
-                            }
-                        }, 3000);
-                    } else if (result.nopermission) {
-                        // Sin permiso
-                        showState('denied-state');
-                    } else {
-                        // Error abriendo puerta
-                        showState('error-state');
-                        document.getElementById('error-message').textContent = result.error;
-                    }
-                } else if (validation.nopermission) {
-                    // Sin permiso para esta puerta
-                    showState('denied-state');
+                if (response.ok) {
+                    doorMessage.textContent = 'Puerta abierta correctamente';
+                    doorMessage.className = 'success';
                 } else {
-                    // Token inválido, mostrar login
-                    showState('login-state');
+                    const data = await response.json();
+                    doorMessage.textContent = data.detail || 'Error abriendo puerta';
+                    doorMessage.className = 'error';
                 }
-            } else {
-                // No hay token, mostrar login
-                showState('login-state');
+            } catch (error) {
+                console.error('Error abriendo puerta:', error);
+                doorMessage.textContent = 'Error de conexión';
+                doorMessage.className = 'error';
+                doorMessage.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            // Detener reconexión WebSocket
+            closeWebSocket();
+
+            // Borrar token y datos de usuario
+            localStorage.removeItem('accessToken');
+            token = null;
+            currentUser = null;
+            hasPermission = false;
+
+            // Mostrar formulario de login
+            showLoginForm();
+        }
+
+        // Funciones para manejar WebSocket con reconexión
+        function setupWebSocket(userId) {
+            // Cerrar cualquier conexión existente
+            closeWebSocket();
+
+            // Iniciar nueva conexión
+            connectWebSocket(userId || 'anon');
+
+            // Configurar ping periódico para mantener la conexión activa
+            pingInterval = setInterval(() => {
+                if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                    wsConnection.send(JSON.stringify({ type: 'ping' }));
+                }
+            }, 30000); // Ping cada 30 segundos
+        }
+
+        function connectWebSocket(userId) {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/${userId}`;
+
+                wsConnection = new WebSocket(wsUrl);
+
+                wsConnection.onopen = () => {
+                    console.log('WebSocket conectado');
+                    // Enviar un mensaje inicial para establecer la conexión
+                    wsConnection.send(JSON.stringify({
+                        type: 'connection',
+                        clientId: userId
+                    }));
+                };
+
+                wsConnection.onclose = (event) => {
+                    console.log('WebSocket desconectado, reintentando...', event.code);
+
+                    // Programar reconexión si no fue un cierre limpio
+                    if (event.code !== 1000) {
+                        wsReconnectTimer = setTimeout(() => {
+                            if (token && currentUser) {
+                                connectWebSocket(userId);
+                            }
+                        }, 5000); // Reintentar cada 5 segundos
+                    }
+                };
+
+                wsConnection.onerror = (error) => {
+                    console.error('Error en WebSocket:', error);
+                };
+
+                wsConnection.onmessage = (event) => {
+                    console.log('Mensaje recibido:', event.data);
+                    // Procesar mensajes según sea necesario
+                };
+            } catch (error) {
+                console.error('Error creando WebSocket:', error);
+            }
+        }
+
+        function closeWebSocket() {
+            // Limpiar intervalo de ping
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
             }
 
-            // Event listeners
-            document.getElementById('login-btn').addEventListener('click', async () => {
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
+            // Limpiar timer de reconexión
+            if (wsReconnectTimer) {
+                clearTimeout(wsReconnectTimer);
+                wsReconnectTimer = null;
+            }
 
-                if (!username || !password) {
-                    document.getElementById('login-error').classList.remove('hidden');
-                    document.getElementById('login-error').textContent = 'Completa todos los campos';
-                    return;
+            // Cerrar conexión existente
+            if (wsConnection) {
+                if (wsConnection.readyState === WebSocket.OPEN) {
+                    wsConnection.close(1000, 'Cierre normal');
                 }
-
-                showState('loading-state');
-
-                const loginResult = await login(username, password);
-
-                if (loginResult.success) {
-                    // Guardar token
-                    saveToken(loginResult.token, loginResult.user);
-                    currentToken = loginResult.token;
-
-                    // Intentar abrir puerta
-                    const doorResult = await openDoor(currentToken, currentDoorId);
-
-                    if (doorResult.success) {
-                        // Puerta abierta con éxito
-                        showState('success-state');
-
-                        // Mostrar información del usuario
-                        document.getElementById('success-username').textContent = loginResult.user.username;
-                        document.getElementById('success-date').textContent = new Date().toLocaleString();
-                    } else if (doorResult.nopermission) {
-                        // Sin permiso
-                        showState('denied-state');
-                    } else {
-                        // Error abriendo puerta
-                        showState('error-state');
-                        document.getElementById('error-message').textContent = doorResult.error;
-                    }
-                } else {
-                    // Error de login
-                    showState('login-state');
-                    document.getElementById('login-error').classList.remove('hidden');
-                    document.getElementById('login-error').textContent = loginResult.error;
-                }
-            });
-
-            document.getElementById('retry-btn').addEventListener('click', () => {
-                window.location.reload();
-            });
-        });
+                wsConnection = null;
+            }
+        }
     </script>
 </body>
 

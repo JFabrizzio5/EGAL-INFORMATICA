@@ -3,7 +3,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends, Query, Header
 import asyncio
 from typing import Optional
-from starlette.responses import HTMLResponse, RedirectResponse
+from starlette.responses import HTMLResponse, RedirectResponse, JSONResponse  # Añadir JSONResponse aquí
 from Puertas.models.user_models import UserCreateRequest, PuertaAccionRequest
 from Puertas.services.main_user_service import register_user
 from Puertas.validations import validate_user_data, validate_email_format

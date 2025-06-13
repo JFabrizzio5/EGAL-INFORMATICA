@@ -136,3 +136,46 @@
 1749816233: Client mi_cliente_mqtt disconnected.
 1749816240: New connection from 172.22.80.1:51307 on port 1883.
 1749816240: New client connected from 172.22.80.1:51307 as mi_cliente_mqtt (p5, c1, k60).
+1749816577: New client connected from 172.22.80.1:54598 as receiver-597 (p2, c1, k60).
+1749816606: Client mi_cliente_mqtt disconnected.
+1749816608: New connection from 172.22.80.1:54654 on port 1883.
+1749816608: New client connected from 172.22.80.1:54654 as mi_cliente_mqtt (p5, c1, k60).
+1749816611: Client mi_cliente_mqtt disconnected.
+1749816612: New connection from 172.22.80.1:54675 on port 1883.
+1749816612: New client connected from 172.22.80.1:54675 as mi_cliente_mqtt (p5, c1, k60).
+1749816621: Client mi_cliente_mqtt disconnected.
+1749816623: New connection from 172.22.80.1:54695 on port 1883.
+1749816623: New client connected from 172.22.80.1:54695 as mi_cliente_mqtt (p5, c1, k60).
+1749816623: Client mi_cliente_mqtt closed its connection.
+1749816624: New connection from 172.22.80.1:54703 on port 1883.
+1749816624: New client connected from 172.22.80.1:54703 as mi_cliente_mqtt (p5, c1, k60).
+1749816630: Client mi_cliente_mqtt disconnected.
+1749816632: New connection from 172.22.80.1:54721 on port 1883.
+1749816632: New client connected from 172.22.80.1:54721 as mi_cliente_mqtt (p5, c1, k60).
+1749816634: Client mi_cliente_mqtt disconnected.
+1749816636: New connection from 172.22.80.1:54740 on port 1883.
+1749816636: New client connected from 172.22.80.1:54740 as mi_cliente_mqtt (p5, c1, k60).
+1749816642: Client mi_cliente_mqtt disconnected.
+1749816644: New connection from 172.22.80.1:54774 on port 1883.
+1749816644: New client connected from 172.22.80.1:54774 as mi_cliente_mqtt (p5, c1, k60).
+1749816646: Client mi_cliente_mqtt disconnected.
+1749816648: New connection from 172.22.80.1:54816 on port 1883.
+1749816648: New client connected from 172.22.80.1:54816 as mi_cliente_mqtt (p5, c1, k60).
+1749816919: Client mi_cliente_mqtt disconnected.
+1749816920: New connection from 172.22.80.1:52899 on port 1883.
+1749816920: New client connected from 172.22.80.1:52899 as mi_cliente_mqtt (p5, c1, k60).
+1749816923: Client mi_cliente_mqtt disconnected.
+1749816924: New connection from 172.22.80.1:52920 on port 1883.
+1749816924: New client connected from 172.22.80.1:52920 as mi_cliente_mqtt (p5, c1, k60).
+1749817120: Client mi_cliente_mqtt disconnected.
+1749817121: New connection from 172.22.80.1:53178 on port 1883.
+1749817121: New client connected from 172.22.80.1:53178 as mi_cliente_mqtt (p5, c1, k60).
+1749817125: Client mi_cliente_mqtt disconnected.
+1749817127: New connection from 172.22.80.1:53204 on port 1883.
+1749817127: New client connected from 172.22.80.1:53204 as mi_cliente_mqtt (p5, c1, k60).
+1749817135: Client mi_cliente_mqtt disconnected.
+1749817136: New connection from 172.22.80.1:53231 on port 1883.
+1749817136: New client connected from 172.22.80.1:53231 as mi_cliente_mqtt (p5, c1, k60).
+1749817159: Client mi_cliente_mqtt disconnected.
+1749817165: New connection from 172.22.80.1:53273 on port 1883.
+1749817165: New client connected from 172.22.80.1:53273 as mi_cliente_mqtt (p5, c1, k60).
