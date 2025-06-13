@@ -278,6 +278,13 @@ try:
     app.include_router(puertas_router, prefix='/puertas/v1', tags=['puertas'])
 except ImportError:
     logger.warning("Puertas router no disponible")
+# En main.py
+
+from fastapi.staticfiles import StaticFiles
+
+# Después de crear la app
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 if __name__ == "__main__":
     import uvicorn

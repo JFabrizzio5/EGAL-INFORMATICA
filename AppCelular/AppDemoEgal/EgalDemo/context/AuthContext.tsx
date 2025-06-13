@@ -1,8 +1,8 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter, useSegments } from 'expo-router';
 import axios from 'axios';
 import { API_URL } from '../constants/api';
-import { Alert, Platform } from 'react-native';
 
 // Definir tipo para el usuario
 type User = {
@@ -21,11 +21,20 @@ type AuthContextType = {
   storeTokenInWebView: (token: string) => Promise<boolean>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Definir el contexto
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+// Hook para usar el contexto
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+// Proveedor del contexto
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const segments = useSegments();
 
   // Verificar si ya hay una sesión guardada al iniciar
   useEffect(() => {
@@ -76,7 +85,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loadUserFromStorage();
   }, []);
 
-  // Añadir estos métodos al contexto de autenticación
+  // Redirección basada en estado de autenticación
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+    
+    if (!user && !inAuthGroup) {
+      router.replace('/');
+    } else if (user && inAuthGroup) {
+      router.replace(user.is_admin ? '/(tabs)/adminpanel' : '/(tabs)/useradmin');
+    }
+  }, [user, isLoading, segments]);
 
   // Añadir esta función dentro del provider para compartir con navegador web
   const storeTokenInWebView = async (token: string) => {
@@ -125,29 +145,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Función de cierre de sesión
   const logout = async () => {
-    setUser(null);
-    await AsyncStorage.removeItem('user');
+    try {
+      await AsyncStorage.removeItem('user');
+      // Asegurarnos de que el estado se actualice antes de redirigir
+      setUser(null);
+      // Redirigir inmediatamente a la pantalla de inicio
+      router.replace('/');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      // Intentar redirigir incluso si hay error
+      router.replace('/');
+    }
   };
 
-  // Luego exponer en el context
   return (
     <AuthContext.Provider value={{ 
       user, 
       login, 
       logout, 
       isLoading, 
-      storeTokenInWebView // <-- Nueva función exportada
+   
     }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-// Hook para usar el contexto
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth debe usarse dentro de un AuthProvider');
-  }
-  return context;
-};
+}
