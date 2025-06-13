@@ -406,12 +406,18 @@
             // Iniciar nueva conexión
             connectWebSocket(userId || 'anon');
 
-            // Configurar ping periódico para mantener la conexión activa
+            // Configurar ping periódico más frecuente
             pingInterval = setInterval(() => {
                 if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                    wsConnection.send(JSON.stringify({ type: 'ping' }));
+                    wsConnection.send(JSON.stringify({
+                        type: 'ping',
+                        timestamp: new Date().getTime()
+                    }));
+                } else if (!wsConnection || wsConnection.readyState >= WebSocket.CLOSING) {
+                    // Reconectar si está cerrado o cerrándose
+                    connectWebSocket(userId || 'anon');
                 }
-            }, 30000); // Ping cada 30 segundos
+            }, 15000); // Ping cada 15 segundos en lugar de 30
         }
 
         function connectWebSocket(userId) {
@@ -433,13 +439,15 @@
                 wsConnection.onclose = (event) => {
                     console.log('WebSocket desconectado, reintentando...', event.code);
 
-                    // Programar reconexión si no fue un cierre limpio
+                    // Programar reconexión inmediata si no fue un cierre limpio
                     if (event.code !== 1000) {
                         wsReconnectTimer = setTimeout(() => {
                             if (token && currentUser) {
-                                connectWebSocket(userId);
+                                connectWebSocket(currentUser.id);
+                            } else {
+                                connectWebSocket('anon');
                             }
-                        }, 5000); // Reintentar cada 5 segundos
+                        }, 1000); // Reconectar más rápido (1 segundo)
                     }
                 };
 

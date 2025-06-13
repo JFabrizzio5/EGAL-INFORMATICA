@@ -34,14 +34,19 @@ async def puertas_websocket(websocket: WebSocket, client_id: str):
     await websocket.accept()
     await add_websocket_connection(client_id, websocket)
     
-    try:
-        while True:
-            # Recibir datos con timeout para evitar bloqueos
+    while True:
+        try:
+            # Aumentar el timeout considerablemente
             data = await asyncio.wait_for(
                 websocket.receive_text(),
-                timeout=30.0
+                timeout=600.0  # 10 minutos
             )
             
+            # Manejar ping/pong de forma especial
+            if data.lower().find("ping") != -1:
+                await websocket.send_text("pong")
+                continue
+                
             # Procesar el mensaje en el servicio
             result = await process_puerta_message(client_id, data)
             
@@ -49,14 +54,23 @@ async def puertas_websocket(websocket: WebSocket, client_id: str):
             if result:
                 await websocket.send_text(f"Acción recibida: {data}")
             
-    except WebSocketDisconnect:
-        await remove_websocket_connection(client_id)
-    except asyncio.TimeoutError:
-        logger.warning(f"Timeout en conexión WebSocket de puertas para cliente {client_id}")
-        await remove_websocket_connection(client_id)
-    except Exception as e:
-        logger.error(f"Error en WebSocket de puertas para cliente {client_id}: {e}")
-        await remove_websocket_connection(client_id)
+        except WebSocketDisconnect:
+            await remove_websocket_connection(client_id)
+            break
+            
+        except asyncio.TimeoutError:
+            # Intentar enviar un ping antes de desconectar
+            try:
+                await websocket.send_text("server_ping")
+                # El bucle continuará naturalmente
+            except Exception:
+                await remove_websocket_connection(client_id)
+                break
+                
+        except Exception as e:
+            logger.error(f"Error en WebSocket de puertas para cliente {client_id}: {e}")
+            await remove_websocket_connection(client_id)
+            break
 
 # Endpoint REST para abrir puertas (alternativa al WebSocket)
 @router.post("/abrir")

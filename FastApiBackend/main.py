@@ -188,33 +188,45 @@ manager = WebSocketManager()
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await manager.connect(websocket, client_id)
-    try:
-        while True:
-            # Usar timeout para evitar bloqueos en receive
+    
+    while True:
+        try:
+            # Aumentar el timeout considerablemente (de 30s a 10 minutos)
             data = await asyncio.wait_for(
                 websocket.receive_text(), 
-                timeout=30.0
+                timeout=600.0  # 10 minutos en lugar de 30 segundos
             )
             
             logger.info(f"Mensaje de {client_id}: {data}")
             
-            # Procesar mensaje de forma no bloqueante
+            # Procesar ping/pong de forma especial para mantener la conexión
+            if "ping" in data.lower():
+                await manager.send_personal_message("pong", client_id)
+                continue
+                
+            # Resto del código igual...
             await process_websocket_message(client_id, data)
+            await manager.send_personal_message(f"Servidor recibió: {data}", client_id)
             
-            # Enviar respuesta
-            await manager.send_personal_message(
-                f"Servidor recibió: {data}", 
-                client_id
-            )
+        except WebSocketDisconnect:
+            manager.disconnect(client_id)
+            break
             
-    except WebSocketDisconnect:
-        manager.disconnect(client_id)
-    except asyncio.TimeoutError:
-        logger.warning(f"WebSocket timeout para cliente {client_id}")
-        manager.disconnect(client_id)
-    except Exception as e:
-        logger.error(f"Error en WebSocket {client_id}: {e}")
-        manager.disconnect(client_id)
+        except asyncio.TimeoutError:
+            # En lugar de desconectar, enviar un ping al cliente para verificar conexión
+            try:
+                await manager.send_personal_message("server_ping", client_id)
+                # No necesitamos continue aquí, el bucle while continuará automáticamente
+            except Exception:
+                # Solo desconectar si falla el envío del ping
+                logger.warning(f"WebSocket timeout para cliente {client_id}")
+                manager.disconnect(client_id)
+                break
+                
+        except Exception as e:
+            logger.error(f"Error en WebSocket {client_id}: {e}")
+            manager.disconnect(client_id)
+            break
 
 async def process_websocket_message(client_id: str, message: str):
     """Procesa mensajes WebSocket de forma asíncrona"""
