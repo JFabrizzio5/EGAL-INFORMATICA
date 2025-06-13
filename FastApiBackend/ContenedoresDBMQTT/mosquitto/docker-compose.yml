@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   mosquitto:
     image: eclipse-mosquitto:latest
@@ -14,6 +13,8 @@ services:
     networks:
       - mqtt_network
     restart: unless-stopped
+    # Especificar el archivo de configuración
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
 
 networks:
   mqtt_network:

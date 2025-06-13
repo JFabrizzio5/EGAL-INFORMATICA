@@ -106,7 +106,7 @@ async def publish_message(client: MQTTClient, topic: str, message: str, timeout:
 
 ######################## CONFIGURACIÓN DE MONGO DB ####################
 
-MONGO_URL = os.getenv("MongoUrl", "mongodb://172.22.82.26:27019/")
+MONGO_URL = os.getenv("MongoUrl", "mongodb://192.168.1.160:27017/")
 logger.info(f"MongoDB URL configurada: {MONGO_URL}")
 
 # Pool de conexiones MongoDB (singleton)

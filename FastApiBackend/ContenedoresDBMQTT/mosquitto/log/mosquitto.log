@@ -1,0 +1,108 @@
+1749803157: mosquitto version 2.0.21 starting
+1749803157: Config loaded from /mosquitto/config/mosquitto.conf.
+1749803157: Opening ipv4 listen socket on port 1883.
+1749803157: Opening websockets listen socket on port 9001.
+1749803157: mosquitto version 2.0.21 running
+1749803158: New connection from 172.27.0.1:43138 on port 1883.
+1749803158: New client connected from 172.27.0.1:43138 as mi_cliente_mqtt (p5, c0, k60).
+1749803162: New client connected from 172.22.80.1:61982 as receiver-849 (p2, c1, k60).
+1749806777: Client mi_cliente_mqtt disconnected.
+1749806791: New connection from 172.27.0.1:47650 on port 1883.
+1749806791: New client connected from 172.27.0.1:47650 as mi_cliente_mqtt (p5, c1, k60).
+1749807082: Client receiver-849 closed its connection.
+1749807442: mosquitto version 2.0.21 starting
+1749807442: Config loaded from /mosquitto/config/mosquitto.conf.
+1749807442: Opening ipv4 listen socket on port 1883.
+1749807442: Opening websockets listen socket on port 9001.
+1749807442: mosquitto version 2.0.21 running
+1749807453: New connection from 172.27.0.1:43186 on port 1883.
+1749807453: New client connected from 172.27.0.1:43186 as mi_cliente_mqtt (p5, c1, k60).
+1749808027: New connection from 172.22.80.1:59474 on port 1883.
+1749808027: Client mi_cliente_mqtt already connected, closing old connection.
+1749808027: New client connected from 172.22.80.1:59474 as mi_cliente_mqtt (p5, c1, k60).
+1749808033: New connection from 172.27.0.1:60616 on port 1883.
+1749808033: Client mi_cliente_mqtt already connected, closing old connection.
+1749808033: New client connected from 172.27.0.1:60616 as mi_cliente_mqtt (p5, c0, k60).
+1749808039: New connection from 172.22.80.1:59486 on port 1883.
+1749808039: Client mi_cliente_mqtt already connected, closing old connection.
+1749808039: New client connected from 172.22.80.1:59486 as mi_cliente_mqtt (p5, c0, k60).
+1749808045: New connection from 172.27.0.1:55762 on port 1883.
+1749808045: Client mi_cliente_mqtt already connected, closing old connection.
+1749808045: New client connected from 172.27.0.1:55762 as mi_cliente_mqtt (p5, c0, k60).
+1749808051: New connection from 172.22.80.1:59512 on port 1883.
+1749808051: Client mi_cliente_mqtt already connected, closing old connection.
+1749808051: New client connected from 172.22.80.1:59512 as mi_cliente_mqtt (p5, c0, k60).
+1749808057: New connection from 172.27.0.1:56464 on port 1883.
+1749808057: Client mi_cliente_mqtt already connected, closing old connection.
+1749808057: New client connected from 172.27.0.1:56464 as mi_cliente_mqtt (p5, c0, k60).
+1749808063: New connection from 172.22.80.1:59526 on port 1883.
+1749808063: Client mi_cliente_mqtt already connected, closing old connection.
+1749808063: New client connected from 172.22.80.1:59526 as mi_cliente_mqtt (p5, c0, k60).
+1749808069: New connection from 172.27.0.1:45538 on port 1883.
+1749808069: Client mi_cliente_mqtt already connected, closing old connection.
+1749808069: New client connected from 172.27.0.1:45538 as mi_cliente_mqtt (p5, c0, k60).
+1749808075: New connection from 172.22.80.1:59528 on port 1883.
+1749808075: Client mi_cliente_mqtt already connected, closing old connection.
+1749808075: New client connected from 172.22.80.1:59528 as mi_cliente_mqtt (p5, c0, k60).
+1749808081: New connection from 172.27.0.1:49978 on port 1883.
+1749808081: Client mi_cliente_mqtt already connected, closing old connection.
+1749808081: New client connected from 172.27.0.1:49978 as mi_cliente_mqtt (p5, c0, k60).
+1749808087: New connection from 172.22.80.1:59529 on port 1883.
+1749808087: Client mi_cliente_mqtt already connected, closing old connection.
+1749808087: New client connected from 172.22.80.1:59529 as mi_cliente_mqtt (p5, c0, k60).
+1749808093: New connection from 172.27.0.1:49584 on port 1883.
+1749808093: Client mi_cliente_mqtt already connected, closing old connection.
+1749808093: New client connected from 172.27.0.1:49584 as mi_cliente_mqtt (p5, c0, k60).
+1749808099: New connection from 172.22.80.1:59542 on port 1883.
+1749808099: Client mi_cliente_mqtt already connected, closing old connection.
+1749808099: New client connected from 172.22.80.1:59542 as mi_cliente_mqtt (p5, c0, k60).
+1749808105: New connection from 172.27.0.1:41614 on port 1883.
+1749808105: Client mi_cliente_mqtt already connected, closing old connection.
+1749808105: New client connected from 172.27.0.1:41614 as mi_cliente_mqtt (p5, c0, k60).
+1749808111: New connection from 172.22.80.1:59548 on port 1883.
+1749808111: Client mi_cliente_mqtt already connected, closing old connection.
+1749808111: New client connected from 172.22.80.1:59548 as mi_cliente_mqtt (p5, c0, k60).
+1749808117: New connection from 172.27.0.1:60394 on port 1883.
+1749808117: Client mi_cliente_mqtt already connected, closing old connection.
+1749808117: New client connected from 172.27.0.1:60394 as mi_cliente_mqtt (p5, c0, k60).
+1749808123: New connection from 172.22.80.1:59559 on port 1883.
+1749808123: Client mi_cliente_mqtt already connected, closing old connection.
+1749808123: New client connected from 172.22.80.1:59559 as mi_cliente_mqtt (p5, c0, k60).
+1749808129: New connection from 172.27.0.1:40940 on port 1883.
+1749808129: Client mi_cliente_mqtt already connected, closing old connection.
+1749808129: New client connected from 172.27.0.1:40940 as mi_cliente_mqtt (p5, c0, k60).
+1749808135: New connection from 172.22.80.1:59560 on port 1883.
+1749808135: Client mi_cliente_mqtt already connected, closing old connection.
+1749808135: New client connected from 172.22.80.1:59560 as mi_cliente_mqtt (p5, c0, k60).
+1749808141: New connection from 172.27.0.1:46178 on port 1883.
+1749808141: Client mi_cliente_mqtt already connected, closing old connection.
+1749808141: New client connected from 172.27.0.1:46178 as mi_cliente_mqtt (p5, c0, k60).
+1749808147: New connection from 172.22.80.1:59565 on port 1883.
+1749808147: Client mi_cliente_mqtt already connected, closing old connection.
+1749808147: New client connected from 172.22.80.1:59565 as mi_cliente_mqtt (p5, c0, k60).
+1749808153: New connection from 172.27.0.1:53408 on port 1883.
+1749808153: Client mi_cliente_mqtt already connected, closing old connection.
+1749808153: New client connected from 172.27.0.1:53408 as mi_cliente_mqtt (p5, c0, k60).
+1749808291: Client mi_cliente_mqtt disconnected.
+1749808308: New connection from 172.22.80.1:60896 on port 1883.
+1749808308: New client connected from 172.22.80.1:60896 as mi_cliente_mqtt (p5, c1, k60).
+1749809171: New connection from 172.22.80.1:57616 on port 1883.
+1749809171: New client connected from 172.22.80.1:57616 as auto-4AD43994-D96C-2F5B-75C0-95DEEBEFEC57 (p2, c1, k60).
+1749809171: Client auto-4AD43994-D96C-2F5B-75C0-95DEEBEFEC57 disconnected.
+1749809308: Client mi_cliente_mqtt disconnected.
+1749809311: New connection from 172.22.80.1:57976 on port 1883.
+1749809311: New client connected from 172.22.80.1:57976 as mi_cliente_mqtt (p5, c1, k60).
+1749809337: New connection from 172.22.80.1:58073 on port 1883.
+1749809337: New client connected from 172.22.80.1:58073 as esp32_puertas_controller (p2, c1, k15).
+1749810629: Client mi_cliente_mqtt disconnected.
+1749810632: New connection from 172.22.80.1:49228 on port 1883.
+1749810632: New client connected from 172.22.80.1:49228 as mi_cliente_mqtt (p5, c1, k60).
+1749810693: Client mi_cliente_mqtt disconnected.
+1749810699: New connection from 172.22.80.1:49281 on port 1883.
+1749810699: New client connected from 172.22.80.1:49281 as mi_cliente_mqtt (p5, c1, k60).
+1749810709: Client mi_cliente_mqtt disconnected.
+1749810716: New connection from 172.22.80.1:49294 on port 1883.
+1749810716: New client connected from 172.22.80.1:49294 as mi_cliente_mqtt (p5, c1, k60).
+1749811710: Client mi_cliente_mqtt disconnected.
+1749811714: New connection from 172.22.80.1:52510 on port 1883.
+1749811714: New client connected from 172.22.80.1:52510 as mi_cliente_mqtt (p5, c1, k60).

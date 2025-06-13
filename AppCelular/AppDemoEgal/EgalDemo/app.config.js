@@ -10,12 +10,12 @@ export default {
         "data": [
           {
             "scheme": "http",
-            "host": "172.22.82.26",
+            "host": "192.168.1.160",
             "pathPrefix": "/puertas/v1/abrir"
           },
           {
             "scheme": "https",
-            "host": "172.22.82.26",
+            "host": "192.168.1.160",
             "pathPrefix": "/puertas/v1/abrir"
           }
         ],
@@ -24,6 +24,6 @@ export default {
     ]
   },
   "ios": {
-    "associatedDomains": ["applinks:172.22.82.26"]
+    "associatedDomains": ["applinks:192.168.1.160"]
   }
 }
