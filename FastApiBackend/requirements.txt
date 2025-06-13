@@ -6,3 +6,4 @@ logger
 pyjwt
 redis
 gmqtt
+bcrypt

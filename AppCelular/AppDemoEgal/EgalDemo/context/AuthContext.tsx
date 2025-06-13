@@ -1,68 +1,124 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter, useSegments } from 'expo-router';
+import axios from 'axios';
+import { API_URL } from '../constants/api';
+import { Alert } from 'react-native';
 
-// 1. Definimos la estructura del Contexto
-const AuthContext = createContext(null);
+// Definir tipo para el usuario
+type User = {
+  id: string;
+  username: string;
+  is_admin: boolean;
+  puertas_acceso: string[];
+  token: string;
+};
 
-// 2. Hook para usar el contexto fácilmente en otros componentes
-export function useAuth() {
-  return useContext(AuthContext);
-}
+type AuthContextType = {
+  user: User | null;
+  login: (username: string, password: string) => Promise<User | null>;
+  logout: () => void;
+  isLoading: boolean;
+};
 
-// 3. El Proveedor del Contexto que envolverá nuestra app
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const router = useRouter();
-  const segments = useSegments(); // Nos dice en qué parte de la app estamos
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Verificar si ya hay una sesión guardada al iniciar
   useEffect(() => {
-    // Función para verificar el token al cargar la app
-    const checkAuth = async () => {
-      const token = await AsyncStorage.getItem('user-token');
-      if (token) {
-        setUser(JSON.parse(token));
+    const loadUserFromStorage = async () => {
+      try {
+        const userJson = await AsyncStorage.getItem('user');
+        if (userJson) {
+          const userData = JSON.parse(userJson);
+          
+          try {
+            // Verificar si el token es válido con el backend
+            const response = await axios.get(`${API_URL}/auth/v1/me`, {
+              headers: { Authorization: `Bearer ${userData.token}` }
+            });
+            
+            // Actualizar datos del usuario con respuesta del servidor
+            setUser({
+              ...userData,
+              ...response.data,
+              token: userData.token
+            });
+          } catch (error) {
+            // Si hay error con el token, cerrar sesión
+            console.log('Token inválido o expirado, cerrando sesión');
+            await AsyncStorage.removeItem('user');
+            setUser(null);
+            
+            // Si la app tiene un mecanismo de navegación global, redirigir a login
+            if (router && router.replace) {
+              router.replace('/');
+            }
+            
+            // Mostrar alerta al usuario
+            Alert.alert(
+              "Sesión expirada",
+              "Tu sesión ha expirado. Por favor inicia sesión nuevamente.",
+              [{ text: "OK" }]
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando usuario:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    checkAuth();
+
+    loadUserFromStorage();
   }, []);
 
-  useEffect(() => {
-    const inAuthGroup = segments[0] === '(tabs)';
+  // Función de inicio de sesión
+  const login = async (username: string, password: string): Promise<User | null> => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/v1/login`, {
+        username,
+        password
+      });
 
-    // Si el usuario no está logueado Y se encuentra en una ruta protegida
-    if (!user && inAuthGroup) {
-      // Lo redirigimos a la pantalla de login.
-      router.replace('/');
-    } 
-    // Si el usuario SÍ está logueado Y NO se encuentra en una ruta protegida
-    else if (user && !inAuthGroup) {
-      // Lo redirigimos a su panel correspondiente.
-      router.replace(user.isAdmin ? '/adminpanel' : '/useradmin');
-    }
-  }, [user, segments]);
+      const userData: User = {
+        id: response.data.user_id,
+        username: response.data.username,
+        is_admin: response.data.is_admin,
+        puertas_acceso: response.data.puertas_acceso,
+        token: response.data.access_token
+      };
 
-  const login = async (username, password) => {
-    // Lógica de login simulada
-    if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
-      const userData = { username, isAdmin: username === 'admin' };
+      // Guardar en estado y en AsyncStorage
       setUser(userData);
-      // Guardamos la sesión en AsyncStorage
-      await AsyncStorage.setItem('user-token', JSON.stringify(userData));
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
       return userData;
+    } catch (error) {
+      console.error('Error de inicio de sesión:', error);
+      return null;
     }
-    return null;
   };
 
+  // Función de cierre de sesión
   const logout = async () => {
     setUser(null);
-    // Borramos la sesión de AsyncStorage
-    await AsyncStorage.removeItem('user-token');
+    await AsyncStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
+
+// Hook para usar el contexto
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth debe usarse dentro de un AuthProvider');
+  }
+  return context;
+};

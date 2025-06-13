@@ -18,11 +18,16 @@ async def lifespan(app: FastAPI):
     # Startup
     global mqtt_client
     try:
+        # Inicializar usuarios por defecto
+        from Auth.services.init_service import init_users
+        await init_users()
+        logger.info("Usuarios inicializados correctamente")
+        
         # Inicializar MQTT de forma no bloqueante
         mqtt_client = await initialize_mqtt_async()
         logger.info("MQTT client initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize MQTT: {e}")
+        logger.error(f"Error en inicialización: {e}")
     
     # Imprimir rutas registradas
     logger.info("Rutas registradas:")
@@ -267,6 +272,12 @@ try:
     app.include_router(auth_router, prefix='/auth/v1', tags=['auth'])
 except ImportError:
     logger.warning("Auth router no disponible")
+
+try:
+    from Puertas.api.routes import router as puertas_router
+    app.include_router(puertas_router, prefix='/puertas/v1', tags=['puertas'])
+except ImportError:
+    logger.warning("Puertas router no disponible")
 
 if __name__ == "__main__":
     import uvicorn
