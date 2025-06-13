@@ -47,8 +47,34 @@ export default function AdminPanelScreen() {
 
   useEffect(() => {
     connectWebSocket();
+    
+    // Agregar intervalo de ping para mantener la conexión
+    const pingInterval = setInterval(() => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        try {
+          wsRef.current.send(JSON.stringify({ 
+            type: 'ping',
+            client_id: clientId.current,
+            timestamp: Date.now() 
+          }));
+          addLog("Ping enviado para mantener conexión");
+        } catch (e) {
+          console.error('Error enviando ping:', e);
+        }
+      } else if (!wsRef.current || wsRef.current.readyState !== WebSocket.CONNECTING) {
+        // Reconectar si no está conectado ni conectando
+        connectWebSocket();
+      }
+    }, 15000); // Ping cada 15 segundos
+    
     return () => {
-      wsRef.current?.close();
+      clearInterval(pingInterval);
+      if (wsRef.current) {
+        try {
+          wsRef.current.close();
+        } catch (e) {}
+        wsRef.current = null;
+      }
     };
   }, []);
 
@@ -72,7 +98,15 @@ export default function AdminPanelScreen() {
     };
 
     socket.onmessage = (event) => {
-      addLog(`Servidor: ${event.data}`);
+      const message = event.data;
+      
+      // No mostrar en logs los mensajes de pong para no saturar
+      if (message === "pong" || message === "server_ping") {
+        // Solo actualizar tiempo de último mensaje recibido
+        return;
+      }
+      
+      addLog(`Servidor: ${message}`);
     };
 
     socket.onclose = () => {

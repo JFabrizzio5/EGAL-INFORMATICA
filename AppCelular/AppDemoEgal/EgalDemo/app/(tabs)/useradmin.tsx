@@ -38,8 +38,8 @@ export default function UserAdminScreen() {
   useEffect(() => {
     connectWebSocket();
     
-    // Iniciar temporizador de heartbeat para verificar la conexión
-    heartbeatTimerRef.current = setInterval(checkConnection, 30000);
+    // Reducir el intervalo de verificación a 15 segundos
+    heartbeatTimerRef.current = setInterval(checkConnection, 15000);
     
     return () => {
       cleanupConnection();
@@ -200,78 +200,54 @@ export default function UserAdminScreen() {
     }
   };
   
-  // Modificar el envío de ping para asegurar que se envíe cada 23 segundos como mínimo
+  // Enviar ping para asegurar que se envíe cada 15 segundos como mínimo
   const sendPing = () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      // Solo enviar ping si han pasado al menos 23 segundos desde el último
-      const timeSinceLastPing = Date.now() - lastPingTimeRef.current;
-      if (timeSinceLastPing >= 23000) {
-        wsRef.current.send(JSON.stringify({ type: 'ping' }));
+      try {
+        wsRef.current.send(JSON.stringify({ 
+          type: 'ping',
+          client_id: clientId.current,
+          timestamp: Date.now()
+        }));
         lastPingTimeRef.current = Date.now();
-        addLog("Enviando ping para mantener conexión");
+      } catch (e) {
+        console.error('Error enviando ping:', e);
       }
     }
   };
   
-  // Modificar checkConnection para respetar el intervalo de 23 segundos
+  // Optimizar la función checkConnection
   const checkConnection = () => {
-    // Si no hay una conexión activa, intentar reconectar solo si no hay una reconexión en progreso
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      if (status === "Conectado" && !statusChangeTimerRef.current) {                           
-        // Si estábamos conectados, programar un cambio de estado después de 5 segundos
-        statusChangeTimerRef.current = setTimeout(() => {
-          if (wsRef.current?.readyState !== WebSocket.OPEN) {
-            setStatus("Desconectado");
-            addLog("Detectada desconexión. WebSocket no está abierto.");
-          }
-          statusChangeTimerRef.current = null;
-        }, 5000);
-      }
-      
-      // Intentar reconectar solo si no hay una reconexión en progreso
+    // Si no hay conexión o está cerrándose/cerrada
+    if (!wsRef.current || wsRef.current.readyState >= WebSocket.CLOSING) {
+      // Intentar reconectar de inmediato si no hay reconexión en progreso
       if (!reconnectTimerRef.current) {
         reconnectTimerRef.current = setTimeout(() => {
           reconnectTimerRef.current = null;
           connectWebSocket();
-        }, 5000);
+        }, 1000); // Reconectar más rápido (1 segundo)
       }
       return;
     }
     
-    // Verificar cuánto tiempo ha pasado desde el último ping
-    const timeSinceLastPing = Date.now() - lastPingTimeRef.current;
-    
-    // Solo enviar ping si han pasado al menos 23 segundos desde el último
-    if (timeSinceLastPing >= 5000) {
-      sendPing();
-    }
-    
-    // Verificar si la conexión está inactiva (sin respuesta durante 45+ segundos)
-    if (timeSinceLastPing > 15000) {
-      addLog("Conexión inactiva por largo tiempo. Reiniciando...");
+    // Si la conexión está abierta, enviar ping
+    if (wsRef.current.readyState === WebSocket.OPEN) {
+      const timeSinceLastPing = Date.now() - lastPingTimeRef.current;
       
-      // No cambiar el estado inmediatamente
-      if (!statusChangeTimerRef.current) {
-        statusChangeTimerRef.current = setTimeout(() => {
-          if (wsRef.current?.readyState !== WebSocket.OPEN) {
-            setStatus("Desconectado");
-          }
-          statusChangeTimerRef.current = null;
-        }, 5000);
+      // Enviar ping cada 15 segundos en lugar de 23
+      if (timeSinceLastPing >= 15000) {
+        sendPing();
       }
       
-      // Cerrar y programar reconexión
-      try {
-        wsRef.current.close();
-      } catch (e) {}
-      
-      wsRef.current = null;
-      
-      if (!reconnectTimerRef.current) {
-        reconnectTimerRef.current = setTimeout(() => {
-          reconnectTimerRef.current = null;
-          connectWebSocket();
-        }, 5000);
+      // Si no hay respuesta por 45 segundos, forzar reconexión
+      if (timeSinceLastPing > 45000) {
+        addLog("Sin respuesta por 45 segundos. Forzando reconexión...");
+        try {
+          wsRef.current.close();
+        } catch (e) {}
+        
+        wsRef.current = null;
+        connectWebSocket();
       }
     }
   };
