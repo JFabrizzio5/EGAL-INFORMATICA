@@ -16,6 +16,7 @@ export default function UserAdminScreen() {
   const [status, setStatus] = useState("Desconectado");
   const [logs, setLogs] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [showLogs, setShowLogs] = useState(true);
   const wsRef = useRef(null);
   const clientId = useRef(`user-${Math.floor(Math.random() * 10000)}`);
   const reconnectTimerRef = useRef(null);
@@ -71,11 +72,19 @@ export default function UserAdminScreen() {
   };
 
   const connectWebSocket = () => {
+    // Validar que existe user antes de intentar conectar
+    if (!user) {
+      console.error('No hay usuario autenticado para conectar al WebSocket');
+      return;
+    }
+    
     // Limpiar cualquier conexión existente
     if (wsRef.current) {
       try {
         wsRef.current.close();
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error al cerrar WebSocket previo:', e);
+      }
     }
 
     setStatus("Conectando...");
@@ -196,6 +205,11 @@ export default function UserAdminScreen() {
   };
 
   const handleOpenDoor = (puertaId) => {
+    if (!puertaId) {
+      console.error('ID de puerta no válido');
+      return;
+    }
+
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       Alert.alert(
         "Error de Conexión", 
@@ -215,7 +229,7 @@ export default function UserAdminScreen() {
     }
 
     // Verificar si el usuario tiene acceso a esta puerta
-    if (!user.puertas_acceso.includes(puertaId) && !user.is_admin) {
+    if (!user?.puertas_acceso?.includes(puertaId) && !user?.is_admin) {
       Alert.alert("Acceso Denegado", `No tienes permiso para abrir la puerta ${puertaId}`);
       return;
     }
@@ -326,24 +340,39 @@ export default function UserAdminScreen() {
           )}
         </View>
 
-        <View style={styles.logsContainer}>
-          <View style={styles.logsTitleRow}>
-            <Text style={styles.sectionTitle}>Actividad Reciente</Text>
-            <TouchableOpacity onPress={() => setLogs([])}>
-              <Text style={styles.clearLogsText}>Limpiar</Text>
-            </TouchableOpacity>
+        {showLogs ? (
+          <View style={styles.logsContainer}>
+            <View style={styles.logsTitleRow}>
+              <Text style={styles.sectionTitle}>Actividad Reciente</Text>
+              <View style={styles.logsActions}>
+                <TouchableOpacity onPress={() => setLogs([])} style={styles.logAction}>
+                  <Text style={styles.clearLogsText}>Limpiar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowLogs(false)} style={styles.logAction}>
+                  <Text style={styles.clearLogsText}>Ocultar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            <View style={styles.logsList}>
+              {logs.length > 0 ? (
+                logs.map((log, index) => (
+                  <Text key={index} style={styles.logItem}>{log}</Text>
+                ))
+              ) : (
+                <Text style={styles.noLogs}>No hay actividad registrada</Text>
+              )}
+            </View>
           </View>
-          
-          <View style={styles.logsList}>
-            {logs.length > 0 ? (
-              logs.map((log, index) => (
-                <Text key={index} style={styles.logItem}>{log}</Text>
-              ))
-            ) : (
-              <Text style={styles.noLogs}>No hay actividad registrada</Text>
-            )}
-          </View>
-        </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.showLogsButton}
+            onPress={() => setShowLogs(true)}
+          >
+            <Ionicons name="eye-outline" size={20} color="white" />
+            <Text style={styles.showLogsText}>Mostrar Actividad</Text>
+          </TouchableOpacity>
+        )}
         
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
@@ -594,5 +623,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     marginLeft: 10,
+  },
+  logAction: {
+    marginLeft: 12,
+  },
+  logsActions: {
+    flexDirection: 'row',
+  },
+  showLogsButton: {
+    backgroundColor: '#4299e1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    margin: 16,
+  },
+  showLogsText: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 });

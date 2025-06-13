@@ -5,23 +5,22 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function TabLayout() {
   const { user } = useAuth();
-  
-  if (!user) return null;
-  
+
+  if (!user) {
+    return null;
+  }
+
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#4299e1',
-        headerShown: false
-      }}
-    >
-      {user.isAdmin ? (
+    <Tabs screenOptions={{
+      tabBarActiveTintColor: '#4299e1',
+    }}>
+      {user.is_admin ? (
         <Tabs.Screen
           name="adminpanel"
           options={{
             title: 'Panel Admin',
             tabBarIcon: ({ color }) => (
-              <Ionicons name="shield-checkmark" size={24} color={color} />
+              <Ionicons name="settings" size={24} color={color} />
             ),
           }}
         />
@@ -38,21 +37,21 @@ export default function TabLayout() {
       )}
       
       <Tabs.Screen
-        name="nfc-scanner"
+        name="hotel-info"
         options={{
-          title: 'Escaneo NFC',
+          title: 'Hotel',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="scan" size={24} color={color} />
+            <Ionicons name="business" size={24} color={color} />
           ),
         }}
       />
       
       <Tabs.Screen
-        name="profile"
+        name="explore"
         options={{
-          title: 'Perfil',
+          title: 'Explorar',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="person" size={24} color={color} />
+            <Ionicons name="compass" size={24} color={color} />
           ),
         }}
       />
@@ -68,6 +67,8 @@ export default function TabLayout() {
           }}
         />
       )}
+      
+      {/* La sección de door-management ha sido eliminada para ocultar la gestión de puertas */}
     </Tabs>
   );
 }
