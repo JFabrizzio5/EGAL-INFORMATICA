@@ -15,9 +15,9 @@ load_dotenv(dotenv_path=dotenv_path)
 ####################### CONFIGURACIÓN DE MQTT ####################
 from gmqtt import Client as MQTTClient
 
-MQTT_HOST = os.getenv("MQTT_HOST", "172.22.82.26")
+MQTT_HOST = os.getenv("MQTT_HOST", "192.168.1.160")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
-MQTT_CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "mi_cliente_mqtt")
+MQTT_CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "mi_cliente_mqtt11")
 
 # Configurar el logger primero
 logging.basicConfig(

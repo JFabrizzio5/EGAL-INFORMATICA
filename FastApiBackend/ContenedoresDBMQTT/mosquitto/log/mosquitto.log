@@ -179,3 +179,44 @@
 1749817159: Client mi_cliente_mqtt disconnected.
 1749817165: New connection from 172.22.80.1:53273 on port 1883.
 1749817165: New client connected from 172.22.80.1:53273 as mi_cliente_mqtt (p5, c1, k60).
+1749830270: Client mi_cliente_mqtt disconnected.
+1749830493: New connection from 172.22.80.1:61799 on port 1883.
+1749830493: New client connected from 172.22.80.1:61799 as mi_cliente_mqtt (p5, c1, k60).
+1749830497: Client mi_cliente_mqtt disconnected.
+1749830498: New connection from 172.22.80.1:61822 on port 1883.
+1749830498: New client connected from 172.22.80.1:61822 as mi_cliente_mqtt (p5, c1, k60).
+1749838906: Client mi_cliente_mqtt closed its connection.
+1749881419: Client receiver-597 closed its connection.
+1749883606: mosquitto version 2.0.21 starting
+1749883606: Config loaded from /mosquitto/config/mosquitto.conf.
+1749883606: Opening ipv4 listen socket on port 1883.
+1749883606: Opening websockets listen socket on port 9001.
+1749883606: mosquitto version 2.0.21 running
+1749883618: New connection from 172.22.80.1:51307 on port 1883.
+1749883618: New client connected from 172.22.80.1:51307 as esp32_puertas_controller (p2, c1, k15).
+1749888841: mosquitto version 2.0.21 starting
+1749888841: Config loaded from /mosquitto/config/mosquitto.conf.
+1749888841: Opening ipv4 listen socket on port 1883.
+1749888841: Opening websockets listen socket on port 9001.
+1749888841: mosquitto version 2.0.21 running
+1749888853: New connection from 172.22.80.1:61811 on port 1883.
+1749888853: New client connected from 172.22.80.1:61811 as esp32_puertas_controller (p2, c1, k15).
+1749888856: New connection from 172.22.80.1:61820 on port 1883.
+1749888856: New client connected from 172.22.80.1:61820 as mi_cliente_mqtt (p5, c1, k60).
+1749890090: mosquitto version 2.0.21 starting
+1749890090: Config loaded from /mosquitto/config/mosquitto.conf.
+1749890090: Opening ipv4 listen socket on port 1883.
+1749890090: Opening websockets listen socket on port 9001.
+1749890090: mosquitto version 2.0.21 running
+1749890230: New connection from 172.22.80.1:52122 on port 1883.
+1749890230: New client connected from 172.22.80.1:52122 as mi_cliente_mqtt (p5, c1, k60).
+1749890545: Client mi_cliente_mqtt disconnected.
+1749890549: New connection from 172.22.80.1:49330 on port 1883.
+1749890549: New client connected from 172.22.80.1:49330 as mi_cliente_mqtt (p5, c1, k60).
+1749891214: Client mi_cliente_mqtt disconnected.
+1749891218: New connection from 172.22.80.1:56629 on port 1883.
+1749891218: New client connected from 172.22.80.1:56629 as mi_cliente_mqtt (p5, c1, k60).
+1749891441: Client mi_cliente_mqtt disconnected.
+1749891444: New connection from 172.22.80.1:57873 on port 1883.
+1749891444: New client connected from 172.22.80.1:57873 as mi_cliente_mqtt (p5, c1, k60).
+1749891768: mosquitto version 2.0.21 terminating
