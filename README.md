@@ -9,7 +9,7 @@ https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
 
 Diagrama de circuito 
 --------------------
-![Diagrama de circuito](DiagramaFinalArquitectura.png) 
+![Diagrama de circuito](DiagramaESP32LEDSHABITACIOENS.png) 
 
 Arquitectura General
 --------------------
