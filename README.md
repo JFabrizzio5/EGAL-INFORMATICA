@@ -7,6 +7,10 @@ EGAL-INFORMATICA es un sistema integral de control de acceso a puertas que combi
 Enlace al diagrama completo
 https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
 
+Diagrama de circuito 
+--------------------
+![Diagrama de circuito](DiagramaFinalArquitectura.png) 
+
 Arquitectura General
 --------------------
 
