@@ -1,6 +1,16 @@
 EGAL-INFORMATICA
 ================
+Wiki con integracion de Inteligencia artificial del proyecto 
+--------------------
+Dentro de la wiki esta la documentacion automatizada de tal forma que se puede preguntar en ingles como en español aparte de que te muestra diagramas de casos de uso
+navegabilidad y flujo de datos asi como si quieree saber lineas especificas de archivos
 
+Wiki: https://deepwiki.com/JFabrizzio5/EGAL-INFORMATICA
+
+Link de anexos drive: https://drive.google.com/drive/folders/1ZVwmY87TQHX152w8gSZmbQKb9WFlTlJd?usp=sharing 
+
+Sobre el proyecto
+--------------------
 EGAL-INFORMATICA es un sistema integral de control de acceso a puertas que combina hardware ESP32, backend FastAPI, aplicaciones móviles React Native y interfaces web para gestionar el acceso físico mediante NFC, QR codes y WebSockets.
 ![Descripción de la imagen](DiagramaFinalArquitectura.png) 
 
