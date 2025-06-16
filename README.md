@@ -1,21 +1,11 @@
-# EGAL-INFORMATICA
-EGAL-INFORMATICA
-https://excalidraw.com/#room=84307127d206cfda62a1,0ZtdBVjIrJQejb3gzSiXxg
-
-https://excalidraw.com/#json=ogGscNgf8maBcS6bvldZV,vmCEcOkPbTiGOcAvtBXYPw
-
-#casi final
-https://excalidraw.com/#json=1ileJNnYIQny89lKNUdzB,BsVsGyaMdIsOChlHQxhQ2w
-![Descripción de la imagen](DiagramaFinalArquitectura.png) 
-
-#Aca colocar algunas partes del marco teorico
-https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
-
 EGAL-INFORMATICA
 ================
 
 EGAL-INFORMATICA es un sistema integral de control de acceso a puertas que combina hardware ESP32, backend FastAPI, aplicaciones móviles React Native y interfaces web para gestionar el acceso físico mediante NFC, QR codes y WebSockets.
+![Descripción de la imagen](DiagramaFinalArquitectura.png) 
 
+#Enlace al diagrama completo
+https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
 Arquitectura General
 --------------------
 
