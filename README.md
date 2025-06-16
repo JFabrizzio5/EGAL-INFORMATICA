@@ -10,10 +10,10 @@ https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
 Arquitectura General
 --------------------
 
-*   **Backend FastAPI (CrearModulo.py:1-8)** API REST con autenticación JWT, scaffolding automático, WebSocket, integración con MongoDB, Redis y MQTT.
-*   **Hardware ESP32 (CodigoESP32.ino:1-16)** Control de 4 relés para cerraduras electromagnéticas, comunicación WiFi y WebSocket, activación automática por 5 segundos y reconexión.
-*   **Aplicación Móvil React Native (login.tsx:1-13)** Autenticación con roles, deep links para NFC/QR, generación de tokens de acceso y control remoto de puertas.
-*   **Interfaces Web (index.html:1-6)** Panel de control ESP32 con WebSocket, autenticación NFC y monitoreo en tiempo real.
+*   **Backend FastAPI (CrearModulo.py)** API REST con autenticación JWT, scaffolding automático, WebSocket, integración con MongoDB, Redis y MQTT.
+*   **Hardware ESP32 (CodigoESP32.ino)** Control de 4 relés para cerraduras electromagnéticas, comunicación WiFi y WebSocket, activación automática por 5 segundos y reconexión.
+*   **Aplicación Móvil React Native (login.tsx)** Autenticación con roles, deep links para NFC/QR, generación de tokens de acceso y control remoto de puertas.
+*   **Interfaces Web (index.html)** Panel de control ESP32 con WebSocket, autenticación NFC y monitoreo en tiempo real unicamente para testear.
 
 Funcionalidades Clave
 ---------------------
