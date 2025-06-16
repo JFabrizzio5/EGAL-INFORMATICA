@@ -38,7 +38,16 @@ Configuración Requerida
 
 ### Variables de Entorno
 
-`# Backend API_URL=http://192.168.1.160:8000 WS_URL=ws://192.168.1.160:8000 MONGODB_URL=mongodb://localhost:27017 REDIS_URL=redis://localhost:6379 # ESP32 WIFI_SSID=tu_red_wifi WIFI_PASSWORD=tu_password WEBSOCKET_SERVER=192.168.1.159`
+`# 
+Backend 
+API_URL=http://192.168.1.160:8000 
+WS_URL=ws://192.168.1.160:8000 
+MONGODB_URL=mongodb://localhost:27017 
+REDIS_URL=redis://localhost:6379
+ESP32
+WIFI_SSID=tu_red_wifi 
+WIFI_PASSWORD=tu_password 
+WEBSOCKET_SERVER=192.168.1.159`
 
 ### Deep Links
 
