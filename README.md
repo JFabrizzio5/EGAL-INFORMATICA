@@ -4,8 +4,9 @@ EGAL-INFORMATICA
 EGAL-INFORMATICA es un sistema integral de control de acceso a puertas que combina hardware ESP32, backend FastAPI, aplicaciones móviles React Native y interfaces web para gestionar el acceso físico mediante NFC, QR codes y WebSockets.
 ![Descripción de la imagen](DiagramaFinalArquitectura.png) 
 
-#Enlace al diagrama completo
+Enlace al diagrama completo
 https://excalidraw.com/#room=d54cc58bbb26eb0f0f06,GAJHBUhlB1CitnK47gZ9KA
+
 Arquitectura General
 --------------------
 
